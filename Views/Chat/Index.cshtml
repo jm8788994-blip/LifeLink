@@ -1,0 +1,223 @@
+@{
+    ViewData["Title"] = "Real-Time Messages - LifeLink";
+    int currentUserId = ViewBag.CurrentUserId ?? 0;
+    var activeContact = ViewBag.ActiveContact as LifeLink.Models.User;
+    var recentContacts = ViewBag.RecentContacts as List<LifeLink.Models.User> ?? new();
+    var conversation = ViewBag.Conversation as List<LifeLink.Models.ChatMessage> ?? new();
+}
+
+<div class="container py-4">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden" style="height: 750px;">
+        <div class="row g-0 h-100">
+            <!-- Left Sidebar: Contacts List -->
+            <div class="col-md-4 col-lg-3 border-end bg-light d-flex flex-column h-100">
+                <div class="p-3 border-bottom bg-white d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-chat-dots-fill text-danger me-2"></i>Messages
+                    </h5>
+                    <span class="badge bg-danger rounded-pill">@recentContacts.Count Contacts</span>
+                </div>
+
+                <!-- Contacts Scrollable List -->
+                <div class="list-group list-group-flush overflow-y-auto flex-grow-1" id="contacts-list">
+                    @if (!recentContacts.Any())
+                    {
+                        <div class="p-4 text-center text-muted small">
+                            <i class="bi bi-people fs-2 text-secondary mb-2 d-block"></i>
+                            No conversations yet.<br />Initiate a chat with a donor or patient from your dashboard!
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var c in recentContacts)
+                        {
+                            bool isActive = activeContact != null && activeContact.UserId == c.UserId;
+                            <a asp-action="Index" asp-route:withUserId="@c.UserId" 
+                               class="list-group-item list-group-item-action p-3 @(isActive ? "active bg-danger border-danger" : "")">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle @(isActive ? "bg-white text-danger" : "bg-danger text-white") fw-bold d-flex align-items-center justify-content-center shadow-xs" style="width: 42px; height: 42px;">
+                                        @(c.Name.Length > 0 ? c.Name.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    <div class="flex-grow-1 text-truncate">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 fw-bold @(isActive ? "text-white" : "text-dark") text-truncate">@c.Name</h6>
+                                            <span class="badge @(isActive ? "bg-light text-danger" : "bg-secondary")" style="font-size: 10px;">
+                                                @(c.Role?.RoleName ?? "User")
+                                            </span>
+                                        </div>
+                                        <small class="@(isActive ? "text-white-50" : "text-muted") d-block text-truncate">
+                                            @(c.DonorProfile != null ? $"{c.DonorProfile.BloodGroup} Donor" : c.Phone)
+                                        </small>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Right Area: Active Chat Conversation -->
+            <div class="col-md-8 col-lg-9 d-flex flex-column h-100 bg-white">
+                @if (activeContact == null)
+                {
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-4">
+                        <i class="bi bi-chat-heart text-danger display-1 mb-3"></i>
+                        <h4>Welcome to LifeLink Live Chat</h4>
+                        <p class="text-center text-secondary small" style="max-width: 420px;">
+                            Select a contact from the left list or click <strong>"Chat"</strong> on any donor or patient card to begin an instant real-time conversation.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Chat Header -->
+                    <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-danger text-white rounded-circle fw-bold d-flex align-items-center justify-content-center shadow-sm" style="width: 46px; height: 46px;">
+                                @(activeContact.Name.Length > 0 ? activeContact.Name.Substring(0, 1).ToUpper() : "U")
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="mb-0 fw-bold text-dark">@activeContact.Name</h6>
+                                    <span class="badge bg-danger">@(activeContact.Role?.RoleName ?? "Member")</span>
+                                    @if (activeContact.DonorProfile != null)
+                                    {
+                                        <span class="badge bg-dark">@activeContact.DonorProfile.BloodGroup</span>
+                                    }
+                                </div>
+                                <small class="text-muted">
+                                    <i class="bi bi-geo-alt"></i> @(activeContact.DonorProfile?.Location ?? "Bangladesh") &nbsp;|&nbsp;
+                                    <i class="bi bi-telephone"></i> @activeContact.Phone
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="tel:@activeContact.Phone" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                                <i class="bi bi-telephone me-1"></i>Call Now
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Chat Message Stream -->
+                    <div class="p-3 overflow-y-auto flex-grow-1" id="chat-messages-container" style="background-color: #fdfdfd;">
+                        @if (!conversation.Any())
+                        {
+                            <div class="text-center text-muted p-5 small">
+                                <i class="bi bi-chat-quote fs-2 text-secondary mb-2 d-block"></i>
+                                Start your conversation with <strong>@activeContact.Name</strong> below.
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var msg in conversation)
+                            {
+                                bool isMe = msg.SenderId == currentUserId;
+                                <div class="d-flex @(isMe ? "justify-content-end" : "justify-content-start") mb-3">
+                                    <div class="@(isMe ? "bg-danger text-white rounded-top-4 rounded-start-4 shadow-sm" : "bg-light text-dark border rounded-top-4 rounded-end-4") p-3 small" style="max-width: 70%;">
+                                        <p class="mb-1 text-break">@msg.Message</p>
+                                        <div class="d-flex justify-content-end align-items-center gap-1 @(isMe ? "text-white-50" : "text-muted")" style="font-size: 10px;">
+                                            <span>@msg.CreatedAt.ToString("hh:mm tt")</span>
+                                            @if (isMe)
+                                            {
+                                                <i class="bi @(msg.IsRead ? "bi-check-all text-info" : "bi-check")"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                        <!-- Typing status indicator -->
+                        <div id="contact-typing-indicator" class="d-none text-muted small fst-italic mb-2">
+                            <i class="bi bi-pencil-fill me-1"></i>@activeContact.Name is typing...
+                        </div>
+                    </div>
+
+                    <!-- Chat Input Form -->
+                    <div class="p-3 border-top bg-white">
+                        <form id="chat-send-form" onsubmit="submitChatMessage(event)" class="d-flex align-items-center gap-2">
+                            <input type="text" id="chat-input-text" class="form-control rounded-pill ps-3" placeholder="Type your message to @activeContact.Name..." autocomplete="off" required />
+                            <button type="submit" class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 42px; height: 42px;">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (activeContact != null)
+    {
+        <script>
+            const currentUserId = @currentUserId;
+            const targetUserId = @activeContact.UserId;
+            const chatMessagesContainer = document.getElementById("chat-messages-container");
+            const chatInput = document.getElementById("chat-input-text");
+
+            // Auto-scroll to bottom
+            function scrollToBottom() {
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            }
+            scrollToBottom();
+
+            // Submit message through SignalR
+            async function submitChatMessage(e) {
+                e.preventDefault();
+                const msg = chatInput.value.trim();
+                if (!msg) return;
+
+                chatInput.value = "";
+                if (window.signalRConnection && window.signalRConnection.state === "Connected") {
+                    try {
+                        await window.signalRConnection.invoke("SendMessage", targetUserId, msg);
+                    } catch (err) {
+                        console.error("SignalR SendMessage error:", err);
+                    }
+                } else {
+                    alert("Connecting to live chat service, please try again in a second...");
+                }
+            }
+
+            // Append incoming or outgoing message to UI
+            function appendChatMessage(isMe, message, timestamp) {
+                const msgDiv = document.createElement("div");
+                msgDiv.className = `d-flex ${isMe ? "justify-content-end" : "justify-content-start"} mb-3`;
+                msgDiv.innerHTML = `
+                    <div class="${isMe ? "bg-danger text-white rounded-top-4 rounded-start-4 shadow-sm" : "bg-light text-dark border rounded-top-4 rounded-end-4"} p-3 small" style="max-width: 70%;">
+                        <p class="mb-1 text-break">${escapeHtml(message)}</p>
+                        <div class="d-flex justify-content-end align-items-center gap-1 ${isMe ? "text-white-50" : "text-muted"}" style="font-size: 10px;">
+                            <span>${timestamp}</span>
+                            ${isMe ? '<i class="bi bi-check"></i>' : ''}
+                        </div>
+                    </div>`;
+
+                chatMessagesContainer.appendChild(msgDiv);
+                scrollToBottom();
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Listen for SignalR events
+            document.addEventListener("signalRConnected", function () {
+                window.signalRConnection.on("ReceiveMessage", function (payload) {
+                    if (payload.senderId === targetUserId) {
+                        appendChatMessage(false, payload.message, payload.timestamp);
+                    }
+                });
+
+                window.signalRConnection.on("MessageSentAck", function (payload) {
+                    if (payload.receiverId === targetUserId) {
+                        appendChatMessage(true, payload.message, payload.timestamp);
+                    }
+                });
+            });
+        </script>
+    }
+}

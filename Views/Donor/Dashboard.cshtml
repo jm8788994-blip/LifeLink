@@ -1,0 +1,331 @@
+@model LifeLink.Models.User
+@{
+    ViewData["Title"] = "Donor Dashboard - LifeLink";
+    var profile = Model.DonorProfile!;
+    bool isEligible = ViewBag.IsEligible ?? true;
+    int daysRemaining = ViewBag.DaysRemaining ?? 0;
+    DateTime? nextDate = ViewBag.NextEligibleDate;
+    var matchingRequests = ViewBag.MatchingRequests as List<LifeLink.Models.BloodRequest> ?? new();
+    var notifications = ViewBag.Notifications as List<LifeLink.Models.Notification> ?? new();
+}
+
+<div class="container py-4">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Donor Header Card -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+        <div class="bg-danger text-white p-4">
+            <div class="row align-items-center">
+                <div class="col-md-8 d-flex align-items-center gap-3">
+                    <div class="bg-white text-danger fw-bold rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 75px; height: 75px; font-size: 26px;">
+                        @profile.BloodGroup
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h2 class="fw-bold mb-0">@Model.Name</h2>
+                            <span class="badge bg-warning text-dark"><i class="bi bi-star-fill me-1 text-danger"></i>@(ViewBag.AvgRating ?? 5.0) (@(ViewBag.TotalReviews ?? 0) Reviews)</span>
+                            @if (profile.Availability)
+                            {
+                                <span class="badge bg-success"><i class="bi bi-broadcast me-1"></i>Available</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary"><i class="bi bi-moon me-1"></i>Unavailable</span>
+                            }
+                        </div>
+                        <p class="mb-0 text-white-50 small mt-1">
+                            <i class="bi bi-geo-alt me-1"></i>@(profile.Location ?? "Not Specified") &nbsp;|&nbsp;
+                            <i class="bi bi-telephone me-1"></i>@Model.Phone &nbsp;|&nbsp;
+                            <i class="bi bi-envelope me-1"></i>@Model.Email
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <form asp-action="ToggleAvailability" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn @(profile.Availability ? "btn-outline-light" : "btn-light text-danger") fw-semibold shadow-sm">
+                            <i class="bi bi-power me-1"></i>
+                            @(profile.Availability ? "Switch to Inactive" : "Switch to Active")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats & Medical Eligibility Row -->
+    <div class="row g-3 mb-4">
+        <!-- 90-Day Eligibility Card -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle p-3 @(isEligible ? "bg-success bg-opacity-10 text-success" : "bg-warning bg-opacity-10 text-warning") fs-3">
+                        <i class="bi @(isEligible ? "bi-patch-check-fill" : "bi-hourglass-split")"></i>
+                    </div>
+                    <div class="w-100">
+                        <div class="text-muted small fw-semibold">Medical Eligibility (90-Day Rule)</div>
+                        @if (isEligible)
+                        {
+                            <h5 class="fw-bold text-success mb-0">Eligible to Donate</h5>
+                            <small class="text-muted">You are physically eligible to save a life today.</small>
+                        }
+                        else
+                        {
+                            int recoveryPct = Math.Clamp((int)Math.Round(((90 - daysRemaining) / 90.0) * 100), 5, 95);
+                            <h5 class="fw-bold text-warning mb-0">Resting Period</h5>
+                            <small class="text-muted">Eligible in <strong>@daysRemaining days</strong> (@nextDate?.ToString("MMM dd, yyyy"))</small>
+                            <div class="progress mt-2" style="height: 6px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: @recoveryPct%;" title="@recoveryPct% completed"></div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Donations -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle p-3 bg-danger bg-opacity-10 text-danger fs-3">
+                        <i class="bi bi-droplet-half"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Total Donations</div>
+                        <h3 class="fw-bold text-dark mb-0">@(profile.Donations?.Count ?? 0)</h3>
+                        <small class="text-muted">
+                            Last Donation: @(profile.LastDonationDate?.ToString("MMM dd, yyyy") ?? "Never")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estimated Lives Saved -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle p-3 bg-primary bg-opacity-10 text-primary fs-3">
+                        <i class="bi bi-heart-pulse-fill"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Impact</div>
+                        <h3 class="fw-bold text-primary mb-0">@((profile.Donations?.Count ?? 0) * 3)</h3>
+                        <small class="text-muted">Estimated lives touched / saved</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Emergency & Matching Requests -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-bell-fill text-danger me-2"></i>Matching Blood Requests
+                    </h5>
+                    <span class="badge bg-danger">@matchingRequests.Count Available</span>
+                </div>
+                <div class="card-body p-0">
+                    @if (!matchingRequests.Any())
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-emoji-smile fs-2 text-secondary mb-2 d-block"></i>
+                            No pending emergency requests for your blood compatibility at this moment.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var req in matchingRequests)
+                            {
+                                <div class="list-group-item p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="badge bg-danger fs-5 px-3 py-2 rounded-3">
+                                            @req.BloodGroup
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h6 class="mb-0 fw-bold">@req.Receiver?.Name</h6>
+                                                @if (req.EmergencyLevel == "Critical")
+                                                {
+                                                    <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Critical</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning text-dark">@req.EmergencyLevel</span>
+                                                }
+                                            </div>
+                                            <div class="small text-muted mt-1">
+                                                <i class="bi bi-hospital me-1"></i>@(req.Hospital?.Name ?? "General Hospital") &nbsp;|&nbsp;
+                                                <i class="bi bi-geo-alt me-1"></i>@req.Location &nbsp;|&nbsp;
+                                                <i class="bi bi-calendar-event me-1"></i>Needed by: @(req.RequiredDate?.ToString("MMM dd, yyyy") ?? "Immediate")
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <form asp-action="AcceptRequest" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="requestId" value="@req.RequestId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger fw-semibold px-3 rounded-pill">
+                                                <i class="bi bi-check2-circle me-1"></i>Accept Request
+                                            </button>
+                                        </form>
+                                        <a asp-controller="Chat" asp-action="Index" asp-route-withUserId="@req.ReceiverId" class="btn btn-sm btn-outline-secondary fw-semibold px-3 rounded-pill">
+                                            <i class="bi bi-chat-dots me-1"></i>Chat
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Donation History -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-clock-history text-secondary me-2"></i>Your Donation History
+                    </h5>
+                    @if (profile.Donations != null && profile.Donations.Any())
+                    {
+                        <a asp-action="ExportHistoryCsv" class="btn btn-sm btn-outline-success rounded-pill">
+                            <i class="bi bi-file-earmark-excel me-1"></i>Export CSV
+                        </a>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (profile.Donations == null || !profile.Donations.Any())
+                    {
+                        <div class="p-4 text-center text-muted">
+                            You haven't recorded any blood donations yet.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Hospital</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Certificate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var don in profile.Donations.OrderByDescending(d => d.DonationDate))
+                                    {
+                                        <tr>
+                                            <td>@don.DonationDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@(don.Hospital?.Name ?? "Medical Center")</td>
+                                            <td><span class="badge bg-success">@don.Status</span></td>
+                                            <td class="text-end">
+                                                <a asp-action="Certificate" asp-route-donationId="@don.DonationId" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill fw-semibold">
+                                                    <i class="bi bi-award me-1"></i>Certificate
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Notifications & Tips -->
+        <div class="col-lg-4">
+            <!-- Notifications Box -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-3 pb-2">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-bell text-warning me-1"></i>Recent Notifications
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    @if (!notifications.Any())
+                    {
+                        <div class="p-3 text-center text-muted small">No new notifications.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush small">
+                            @foreach (var n in notifications)
+                            {
+                                <li class="list-group-item p-3">
+                                    <p class="mb-1 text-dark">@n.Message</p>
+                                    <small class="text-muted">@n.CreatedAt.ToString("MMM dd, hh:mm tt")</small>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            <!-- Community Ratings & Appreciation Box (PDF 4.19) -->
+            @{
+                var recentReviews = ViewBag.RecentReviews as List<LifeLink.Models.Rating> ?? new();
+            }
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-star-fill text-warning me-1"></i>Recipient Reviews
+                    </h6>
+                    <span class="badge bg-warning text-dark">⭐ @(ViewBag.AvgRating ?? 5.0) / 5.0</span>
+                </div>
+                <div class="card-body p-0">
+                    @if (!recentReviews.Any())
+                    {
+                        <div class="p-3 text-center text-muted small">No reviews received yet. Complete a donation to earn badges!</div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush small">
+                            @foreach (var rev in recentReviews)
+                            {
+                                <div class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-dark">@(rev.User?.Name ?? "Verified Patient")</strong>
+                                        <span class="text-warning">
+                                            @for (int i = 0; i < rev.RatingValue; i++)
+                                            {
+                                                <i class="bi bi-star-fill" style="font-size: 11px;"></i>
+                                            }
+                                        </span>
+                                    </div>
+                                    <p class="mb-1 text-secondary fst-italic">"@rev.Comment"</p>
+                                    <small class="text-muted" style="font-size: 10px;">@rev.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Pre-donation tips -->
+            <div class="card border-0 shadow-sm rounded-4 bg-light">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold text-danger mb-2"><i class="bi bi-info-circle me-1"></i>Donor Health Tips</h6>
+                    <ul class="small text-muted ps-3 mb-0">
+                        <li>Drink plenty of water before donating.</li>
+                        <li>Have a healthy meal before blood donation.</li>
+                        <li>Avoid heavy lifting for the rest of the day.</li>
+                        <li>Maintain at least 90 days interval between donations.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

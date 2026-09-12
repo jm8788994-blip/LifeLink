@@ -1,0 +1,175 @@
+<!-- Rating & Feedback Modal (PDF 4.19) -->
+<div class="modal fade" id="ratingFeedbackModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-2xl rounded-4 overflow-hidden">
+            <div class="modal-header bg-danger text-white py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-star-fill text-warning fs-5"></i>
+                    <h5 class="modal-title fw-bold mb-0">Rate & Review Donor</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted small mb-3">
+                    Your feedback helps recognize heroic donors and maintain life-saving service quality!
+                </p>
+
+                <h6 class="fw-bold text-dark mb-1" id="ratingTargetName">Donor Review</h6>
+                <div class="text-muted small mb-3" id="ratingTargetSub">Blood Donation Experience</div>
+
+                <!-- 5-Star Interactive Selector -->
+                <div class="d-flex justify-content-center gap-2 my-3" id="star-rating-group">
+                    <i class="bi bi-star-fill star-icon fs-1 text-warning" data-val="1" role="button"></i>
+                    <i class="bi bi-star-fill star-icon fs-1 text-warning" data-val="2" role="button"></i>
+                    <i class="bi bi-star-fill star-icon fs-1 text-warning" data-val="3" role="button"></i>
+                    <i class="bi bi-star-fill star-icon fs-1 text-warning" data-val="4" role="button"></i>
+                    <i class="bi bi-star-fill star-icon fs-1 text-warning" data-val="5" role="button"></i>
+                </div>
+                <div class="fw-bold text-danger mb-3" id="star-label-text">5 Stars - Exceptional Hero!</div>
+
+                <!-- Quick Compliment Tags -->
+                <div class="d-flex flex-wrap justify-content-center gap-1 mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small tag-btn" onclick="addTagToComment('Lifesaver')">❤️ Lifesaver</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small tag-btn" onclick="addTagToComment('Punctual & Fast')">⚡ Punctual & Fast</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small tag-btn" onclick="addTagToComment('Courteous & Polite')">🙏 Courteous & Polite</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small tag-btn" onclick="addTagToComment('Highly Recommended')">⭐ Highly Recommended</button>
+                </div>
+
+                <!-- Written Review Comment -->
+                <div class="text-start mb-2">
+                    <label class="form-label small fw-semibold text-secondary">Leave a message of gratitude</label>
+                    <textarea id="ratingComment" class="form-control rounded-3" rows="3" placeholder="Write a short appreciation message for this donor..."></textarea>
+                </div>
+
+                <input type="hidden" id="ratingTargetUserId" value="0" />
+                <input type="hidden" id="ratingRequestId" value="0" />
+                <input type="hidden" id="selectedStarValue" value="5" />
+            </div>
+
+            <div class="modal-footer bg-light border-0 py-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Skip for Now</button>
+                <button type="button" class="btn btn-sm btn-danger rounded-pill px-4 fw-semibold" id="submitRatingBtn" onclick="submitUserRating()">
+                    <i class="bi bi-send-fill me-1"></i>Submit Feedback
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-icon {
+        cursor: pointer;
+        transition: transform 0.15s;
+    }
+    .star-icon:hover {
+        transform: scale(1.2);
+    }
+    .tag-btn:hover {
+        background-color: #fee2e2;
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+</style>
+
+<script>
+    let currentRating = 5;
+    const starLabels = {
+        1: "1 Star - Needs Improvement",
+        2: "2 Stars - Below Average",
+        3: "3 Stars - Good Service",
+        4: "4 Stars - Great Experience",
+        5: "5 Stars - Exceptional Hero!"
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll("#star-rating-group .star-icon");
+        stars.forEach(star => {
+            star.addEventListener("click", function () {
+                const val = parseInt(this.getAttribute("data-val"));
+                setStars(val);
+            });
+        });
+    });
+
+    function setStars(val) {
+        currentRating = val;
+        document.getElementById("selectedStarValue").value = val;
+        document.getElementById("star-label-text").innerText = starLabels[val] || `${val} Stars`;
+
+        const stars = document.querySelectorAll("#star-rating-group .star-icon");
+        stars.forEach(s => {
+            const sVal = parseInt(s.getAttribute("data-val"));
+            if (sVal <= val) {
+                s.classList.remove("text-secondary", "bi-star");
+                s.classList.add("text-warning", "bi-star-fill");
+            } else {
+                s.classList.remove("text-warning", "bi-star-fill");
+                s.classList.add("text-secondary", "bi-star");
+            }
+        });
+    }
+
+    function addTagToComment(tag) {
+        const commentBox = document.getElementById("ratingComment");
+        const cur = commentBox.value.trim();
+        commentBox.value = cur ? `${cur}, ${tag}` : tag;
+    }
+
+    function openRatingModal(targetUserId, targetName, requestId) {
+        document.getElementById("ratingTargetUserId").value = targetUserId;
+        document.getElementById("ratingRequestId").value = requestId || 0;
+        document.getElementById("ratingTargetName").innerText = targetName ? `Review for ${targetName}` : "Donor Review";
+        document.getElementById("ratingComment").value = "";
+        setStars(5);
+
+        const modalEl = document.getElementById("ratingFeedbackModal");
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+
+    async function submitUserRating() {
+        const targetUserId = parseInt(document.getElementById("ratingTargetUserId").value);
+        const requestId = parseInt(document.getElementById("ratingRequestId").value);
+        const ratingValue = parseInt(document.getElementById("selectedStarValue").value);
+        const comment = document.getElementById("ratingComment").value.trim();
+        const submitBtn = document.getElementById("submitRatingBtn");
+
+        if (targetUserId <= 0) {
+            alert("No user specified to rate.");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Submitting...`;
+
+        try {
+            const res = await fetch('/Rating/Submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUserId: targetUserId,
+                    ratingValue: ratingValue,
+                    comment: comment,
+                    requestId: requestId
+                })
+            });
+
+            if (res.ok) {
+                const modalEl = document.getElementById("ratingFeedbackModal");
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+                alert("Thank you! Your 5-star rating and feedback have been recorded.");
+                location.reload();
+            } else {
+                alert("Could not submit rating. Please try again.");
+            }
+        } catch (e) {
+            alert("Network error while submitting rating.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="bi bi-send-fill me-1"></i>Submit Feedback`;
+        }
+    }
+</script>

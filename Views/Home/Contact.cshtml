@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Contact Us";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="about-hero">
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p class="lead">We'd love to hear from you</p>
+    </div>
+</section>
+
+<section class="form-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="contact-info-card mb-4">
+                    <div class="icon"><i class="fas fa-phone"></i></div>
+                    <h5>Phone</h5>
+                    <p class="text-muted mb-0">+880-1234-567890</p>
+                    <p class="text-muted">+880-9876-543210</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="contact-info-card mb-4">
+                    <div class="icon"><i class="fas fa-envelope"></i></div>
+                    <h5>Email</h5>
+                    <p class="text-muted mb-0">info@lifelink.com</p>
+                    <p class="text-muted">support@lifelink.com</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="contact-info-card mb-4">
+                    <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <h5>Address</h5>
+                    <p class="text-muted mb-0">123 Blood Bank Road</p>
+                    <p class="text-muted">Dhaka, Bangladesh</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-lg-8 mx-auto">
+                <div class="form-card">
+                    <h4 class="text-center mb-4">Send us a Message</h4>
+                    <form>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Your Name</label>
+                                <input type="text" class="form-control" placeholder="Enter your name" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Your Email</label>
+                                <input type="email" class="form-control" placeholder="Enter your email" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Subject</label>
+                                <input type="text" class="form-control" placeholder="Enter subject" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Message</label>
+                                <textarea class="form-control" rows="5" placeholder="Write your message here..."></textarea>
+                            </div>
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-danger btn-lg px-5">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

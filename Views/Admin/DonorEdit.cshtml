@@ -1,0 +1,88 @@
+@model LifeLink.Models.DonorProfile
+@{
+    ViewData["Title"] = "Edit Donor";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Content Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="mb-0">Edit Donor #@Model.DonorId</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Donors">Donors</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title"><i class="bi bi-person-gear me-2"></i>Donor Profile Details</h3>
+            </div>
+            <div class="card-body">
+                <form asp-controller="Admin" asp-action="DonorEdit" asp-route-id="@Model.DonorId" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" name="name" class="form-control" value="@(Model.User?.Name)" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" name="email" class="form-control" value="@(Model.User?.Email)" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" name="phone" class="form-control" value="@(Model.User?.Phone)" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Blood Type *</label>
+                            <select name="bloodGroup" class="form-select" required>
+                                <option value="A+" selected="@(Model.BloodGroup == "A+")">A+</option>
+                                <option value="A-" selected="@(Model.BloodGroup == "A-")">A-</option>
+                                <option value="B+" selected="@(Model.BloodGroup == "B+")">B+</option>
+                                <option value="B-" selected="@(Model.BloodGroup == "B-")">B-</option>
+                                <option value="AB+" selected="@(Model.BloodGroup == "AB+")">AB+</option>
+                                <option value="AB-" selected="@(Model.BloodGroup == "AB-")">AB-</option>
+                                <option value="O+" selected="@(Model.BloodGroup == "O+")">O+</option>
+                                <option value="O-" selected="@(Model.BloodGroup == "O-")">O-</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Location / City *</label>
+                            <input type="text" name="location" class="form-control" value="@Model.Location" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Donation Date</label>
+                            <input type="date" name="lastDonationDate" class="form-control" value="@(Model.LastDonationDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Availability Status</label>
+                            <select name="availability" class="form-select">
+                                <option value="true" selected="@Model.Availability">Available</option>
+                                <option value="false" selected="@(!Model.Availability)">Unavailable / Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-danger px-4 me-2">
+                                <i class="bi bi-check-circle me-1"></i>Save Changes
+                            </button>
+                            <a asp-controller="Admin" asp-action="Donors" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

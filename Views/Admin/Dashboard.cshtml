@@ -1,0 +1,224 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var recentDonors = ViewBag.RecentDonors as List<LifeLink.Models.DonorProfile> ?? new List<LifeLink.Models.DonorProfile>();
+    var recentRequests = ViewBag.RecentRequests as List<LifeLink.Models.BloodRequest> ?? new List<LifeLink.Models.BloodRequest>();
+}
+
+<!-- Content Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="mb-0">Admin Dashboard</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Website</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Info Boxes -->
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>@(ViewBag.TotalBloodBags ?? 0)</h3>
+                        <p>Total Blood Units in Stock</p>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-droplet"></i>
+                    </div>
+                    <a asp-controller="Admin" asp-action="BloodBags" class="small-box-footer">View Inventory <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>@(ViewBag.TotalDonors ?? 0)</h3>
+                        <p>Registered Donors</p>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <a asp-controller="Admin" asp-action="Donors" class="small-box-footer">Manage Donors <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>@(ViewBag.PendingRequests ?? 0)</h3>
+                        <p>Pending Blood Requests</p>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <a asp-controller="Admin" asp-action="Recipients" class="small-box-footer">Review Requests <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>@(ViewBag.TotalHospitals ?? 0)</h3>
+                        <p>Verified Hospitals</p>
+                    </div>
+                    <div class="icon">
+                        <i class="bi bi-hospital"></i>
+                    </div>
+                    <a asp-controller="Home" asp-action="BloodAvailability" class="small-box-footer">Check Availability <i class="bi bi-arrow-right-circle"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="bi bi-bar-chart-fill me-2"></i>Monthly Donation Overview</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="donationChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="bi bi-pie-chart-fill me-2"></i>Blood Type Stock Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="bloodTypeChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title"><i class="bi bi-person-check-fill me-2"></i>Recent Donors</h3>
+                        <a asp-controller="Admin" asp-action="Donors" class="btn btn-sm btn-outline-danger">View All</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @if (recentDonors.Any())
+                            {
+                                foreach (var donor in recentDonors)
+                                {
+                                    <li class="list-group-item d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://ui-avatars.com/api/?name=@(Uri.EscapeDataString(donor.User?.Name ?? "Donor"))&background=dc3545&color=fff&size=40" class="rounded-circle me-3" alt="Donor" />
+                                            <div>
+                                                <h6 class="mb-0">@(donor.User?.Name ?? "Anonymous")</h6>
+                                                <small class="text-muted">Blood Type: <strong class="text-danger">@donor.BloodGroup</strong> | @donor.Location</small>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="badge @(donor.Availability ? "bg-success" : "bg-secondary")">@(donor.Availability ? "Available" : "Unavailable")</span>
+                                            <a asp-controller="Admin" asp-action="DonorEdit" asp-route-id="@donor.DonorId" class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-pencil"></i></a>
+                                        </div>
+                                    </li>
+                                }
+                            }
+                            else
+                            {
+                                <li class="list-group-item text-center text-muted py-3">No donor records available yet.</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title"><i class="bi bi-exclamation-circle-fill me-2"></i>Recent Blood Requests</h3>
+                        <a asp-controller="Admin" asp-action="Recipients" class="btn btn-sm btn-outline-danger">View All</a>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            @if (recentRequests.Any())
+                            {
+                                foreach (var req in recentRequests)
+                                {
+                                    var badgeClass = req.Status == "Approved" ? "bg-success" :
+                                                     req.Status == "Pending" ? "bg-warning text-dark" : "bg-danger";
+                                    <li class="list-group-item d-flex align-items-center justify-content-between">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">@(req.Hospital?.Name ?? "Central Hospital") - <span class="badge bg-danger">@req.BloodGroup</span> needed</h6>
+                                            <small class="text-muted">By: @(req.Receiver?.Name ?? "Patient") | Required: @(req.RequiredDate?.ToString("yyyy-MM-dd") ?? req.RequestDate.ToString("yyyy-MM-dd"))</small>
+                                        </div>
+                                        <div>
+                                            <span class="badge @badgeClass me-2">@req.Status</span>
+                                            <a asp-controller="Admin" asp-action="RecipientEdit" asp-route-id="@req.RequestId" class="btn btn-sm btn-outline-info"><i class="bi bi-pencil"></i></a>
+                                        </div>
+                                    </li>
+                                }
+                            }
+                            else
+                            {
+                                <li class="list-group-item text-center text-muted py-3">No blood requests submitted yet.</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Donation Overview Chart
+        const ctxDonation = document.getElementById('donationChart').getContext('2d');
+        new Chart(ctxDonation, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                datasets: [{
+                    label: 'Donations',
+                    data: [65, 78, 90, 85, 95, 110, 125, 140, 160],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Blood Type Distribution Chart
+        const ctxBlood = document.getElementById('bloodTypeChart').getContext('2d');
+        new Chart(ctxBlood, {
+            type: 'doughnut',
+            data: {
+                labels: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
+                datasets: [{
+                    data: [35, 12, 30, 8, 45, 10, 15, 5],
+                    backgroundColor: [
+                        '#dc3545', '#ff6b6b', '#28a745', '#51cf66',
+                        '#007bff', '#339af0', '#ffc107', '#fcc419'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    </script>
+}

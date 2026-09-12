@@ -1,0 +1,108 @@
+@model LifeLink.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Sign In - LifeLink";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-danger text-white text-center py-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-white text-danger rounded-circle mb-2" style="width: 54px; height: 54px;">
+                        <i class="bi bi-droplet-fill fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold mb-0">Welcome to LifeLink</h3>
+                    <p class="small text-white-50 mb-0">Sign in to your account</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Info"] != null)
+                    {
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="bi bi-info-circle-fill me-2"></i>@TempData["Info"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <form asp-action="Login" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ReturnUrl" />
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold text-secondary">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="Email" id="emailInput" class="form-control bg-light border-start-0 ps-0" placeholder="name@example.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label asp-for="Password" class="form-label fw-semibold text-secondary mb-0">Password</label>
+                                <a asp-action="ForgotPassword" class="small text-decoration-none text-danger">Forgot?</a>
+                            </div>
+                            <div class="input-group mt-1">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                                <input asp-for="Password" id="passwordInput" class="form-control bg-light border-start-0 ps-0" placeholder="••••••••" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input asp-for="RememberMe" class="form-check-input" id="rememberMeCheck" />
+                            <label asp-for="RememberMe" class="form-check-label text-muted small" for="rememberMeCheck">Remember me on this browser</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100 py-2 fw-semibold rounded-3 shadow-sm">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </button>
+                    </form>
+
+                    <!-- Quick Demo Credentials Pills for testing & defense -->
+                    <div class="mt-4 pt-3 border-top">
+                        <p class="small text-muted mb-2 text-center fw-semibold">Quick Demo Login (Click to Autofill):</p>
+                        <div class="d-flex flex-wrap gap-1 justify-content-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="fillDemo('admin@lifelink.com', 'admin@123')">
+                                <i class="bi bi-shield-lock me-1"></i>Admin
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillDemo('ahmed@email.com', 'donor@123')">
+                                <i class="bi bi-person-heart me-1"></i>Donor
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="fillDemo('karim@email.com', 'receiver@123')">
+                                <i class="bi bi-person me-1"></i>Receiver
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="fillDemo('dmc@hospital.com', 'hospital@123')">
+                                <i class="bi bi-hospital me-1"></i>Hospital
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light text-center py-3">
+                    <span class="text-muted small">Don't have an account? </span>
+                    <a asp-action="Register" class="text-danger fw-semibold small text-decoration-none">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function fillDemo(email, pass) {
+            document.getElementById('emailInput').value = email;
+            document.getElementById('passwordInput').value = pass;
+        }
+    </script>
+}

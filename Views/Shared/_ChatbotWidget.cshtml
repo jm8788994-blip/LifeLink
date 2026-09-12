@@ -1,0 +1,263 @@
+<!-- LifeLink AI Assistant Floating Chatbot Widget -->
+<div id="lifelink-chatbot-container">
+    <!-- Floating Trigger Button -->
+    <button id="chatbot-toggle-btn" class="btn btn-danger rounded-circle shadow-lg d-flex align-items-center justify-content-center" title="Ask LifeLink AI Assistant" aria-label="Open AI Chatbot">
+        <i class="bi bi-robot fs-3" id="chatbot-icon-open"></i>
+        <i class="bi bi-x-lg fs-4 d-none" id="chatbot-icon-close"></i>
+        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
+            <span class="visually-hidden">Online</span>
+        </span>
+    </button>
+
+    <!-- Chat Window Card -->
+    <div id="chatbot-window" class="card shadow-2xl border-0 rounded-4 d-none">
+        <!-- Header -->
+        <div class="card-header bg-danger text-white py-3 px-3 d-flex align-items-center justify-content-between rounded-top-4">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-white text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-robot fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">LifeLink AI Assistant</h6>
+                    <small class="text-white-50 d-flex align-items-center gap-1">
+                        <span class="spinner-grow spinner-grow-sm text-success" style="width: 6px; height: 6px;"></span>
+                        Online | AI Engine Ready
+                    </small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <button type="button" class="btn btn-sm btn-link text-white p-1" id="chatbot-minimize-btn" title="Minimize">
+                    <i class="bi bi-dash-lg fs-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="card-body p-3 overflow-y-auto" id="chatbot-messages" style="height: 360px; background-color: #f8fafc;">
+            <!-- Welcome Bot Message -->
+            <div class="d-flex align-items-start gap-2 mb-3">
+                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
+                    <i class="bi bi-robot small"></i>
+                </div>
+                <div class="bg-white p-3 rounded-4 rounded-top-0 shadow-sm text-dark small" style="max-width: 85%;">
+                    Hello! I am your <strong>LifeLink AI Assistant</strong>. How can I assist you today?
+                    <div class="mt-2 text-muted" style="font-size: 11px;">
+                        Ask me about blood availability, donor registration, eligibility rules, or emergency requests!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Suggestions Chips -->
+            <div id="chatbot-quick-chips" class="d-flex flex-wrap gap-1 mb-3">
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill py-0 px-2 small chip-btn" onclick="sendQuickQuery('Check blood stock')">
+                    🩸 Check Blood Stock
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small chip-btn" onclick="sendQuickQuery('How to register as donor?')">
+                    🙋 How to Register?
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small chip-btn" onclick="sendQuickQuery('Eligibility rules')">
+                    ⏱️ Eligibility Rules
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 small chip-btn" onclick="sendQuickQuery('Who can donate to O+?')">
+                    🔬 Compatibility
+                </button>
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="chatbot-typing" class="d-none align-items-center gap-2 mb-3">
+                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
+                    <i class="bi bi-robot small"></i>
+                </div>
+                <div class="bg-white p-2 px-3 rounded-4 shadow-sm text-muted small">
+                    <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span> Thinking
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Input Form -->
+        <div class="card-footer bg-white border-top p-2">
+            <form id="chatbot-form" onsubmit="handleChatSubmit(event)" class="d-flex align-items-center gap-2">
+                <input type="text" id="chatbot-input" class="form-control form-control-sm rounded-pill ps-3" placeholder="Type your question here..." autocomplete="off" />
+                <button type="submit" class="btn btn-danger btn-sm rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;" title="Send">
+                    <i class="bi bi-send-fill" style="font-size: 13px;"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    #lifelink-chatbot-container {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        z-index: 9999;
+        font-family: inherit;
+    }
+    #chatbot-toggle-btn {
+        width: 60px;
+        height: 60px;
+        border: none;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+    }
+    #chatbot-toggle-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 10px 25px rgba(220, 53, 69, 0.5) !important;
+    }
+    #chatbot-window {
+        position: absolute;
+        bottom: 75px;
+        right: 0;
+        width: 360px;
+        max-width: calc(100vw - 40px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+        animation: chatSlideUp 0.25s ease-out forwards;
+    }
+    @@keyframes chatSlideUp {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .typing-dots span {
+        animation: typingBlink 1.4s infinite;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @@keyframes typingBlink {
+        0%, 80%, 100% { opacity: 0; }
+        40% { opacity: 1; }
+    }
+    .chip-btn {
+        font-size: 12px;
+        transition: all 0.15s;
+    }
+    .chip-btn:hover {
+        transform: translateY(-1px);
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleBtn = document.getElementById("chatbot-toggle-btn");
+        const chatWindow = document.getElementById("chatbot-window");
+        const iconOpen = document.getElementById("chatbot-icon-open");
+        const iconClose = document.getElementById("chatbot-icon-close");
+        const minimizeBtn = document.getElementById("chatbot-minimize-btn");
+        const inputField = document.getElementById("chatbot-input");
+
+        function toggleChat() {
+            const isClosed = chatWindow.classList.contains("d-none");
+            if (isClosed) {
+                chatWindow.classList.remove("d-none");
+                iconOpen.classList.add("d-none");
+                iconClose.classList.remove("d-none");
+                setTimeout(() => inputField.focus(), 150);
+            } else {
+                chatWindow.classList.add("d-none");
+                iconOpen.classList.remove("d-none");
+                iconClose.classList.add("d-none");
+            }
+        }
+
+        toggleBtn.addEventListener("click", toggleChat);
+        minimizeBtn.addEventListener("click", toggleChat);
+    });
+
+    function sendQuickQuery(text) {
+        document.getElementById("chatbot-input").value = text;
+        handleChatSubmit(new Event('submit'));
+    }
+
+    async function handleChatSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById("chatbot-input");
+        const query = input.value.trim();
+        if (!query) return;
+
+        input.value = "";
+        appendUserMessage(query);
+
+        const typing = document.getElementById("chatbot-typing");
+        const messagesArea = document.getElementById("chatbot-messages");
+        typing.classList.remove("d-none");
+        typing.classList.add("d-flex");
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+
+        try {
+            const res = await fetch('/Ai/Chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: query })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                typing.classList.add("d-none");
+                typing.classList.remove("d-flex");
+                appendBotMessage(data.answer, data.quickReplies, data.actionUrl);
+            } else {
+                throw new Error("Network error");
+            }
+        } catch (err) {
+            typing.classList.add("d-none");
+            typing.classList.remove("d-flex");
+            appendBotMessage("I am temporarily having trouble reaching the server. Please try again or check your connection.");
+        }
+    }
+
+    function appendUserMessage(text) {
+        const messagesArea = document.getElementById("chatbot-messages");
+        const typing = document.getElementById("chatbot-typing");
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "d-flex justify-content-end mb-3";
+        msgDiv.innerHTML = `
+            <div class="bg-danger text-white p-2 px-3 rounded-4 rounded-top-end-0 shadow-sm small" style="max-width: 80%;">
+                ${escapeHtml(text)}
+            </div>`;
+
+        messagesArea.insertBefore(msgDiv, typing);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    function appendBotMessage(answerHtml, quickReplies, actionUrl) {
+        const messagesArea = document.getElementById("chatbot-messages");
+        const typing = document.getElementById("chatbot-typing");
+
+        let actionBtnHtml = "";
+        if (actionUrl) {
+            actionBtnHtml = `<div class="mt-2"><a href="${actionUrl}" class="btn btn-xs btn-danger text-white py-1 px-3 rounded-pill small">Proceed Now &rarr;</a></div>`;
+        }
+
+        let quickChipsHtml = "";
+        if (quickReplies && quickReplies.length > 0) {
+            quickChipsHtml = `<div class="d-flex flex-wrap gap-1 mt-2 pt-2 border-top">`;
+            quickReplies.forEach(chip => {
+                quickChipsHtml += `<button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 small chip-btn" onclick="sendQuickQuery('${escapeHtml(chip)}')">${escapeHtml(chip)}</button>`;
+            });
+            quickChipsHtml += `</div>`;
+        }
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "d-flex align-items-start gap-2 mb-3";
+        msgDiv.innerHTML = `
+            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px;">
+                <i class="bi bi-robot small"></i>
+            </div>
+            <div class="bg-white p-3 rounded-4 rounded-top-0 shadow-sm text-dark small" style="max-width: 85%;">
+                <div>${answerHtml}</div>
+                ${actionBtnHtml}
+                ${quickChipsHtml}
+            </div>`;
+
+        messagesArea.insertBefore(msgDiv, typing);
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>

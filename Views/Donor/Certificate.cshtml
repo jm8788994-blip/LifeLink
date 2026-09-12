@@ -1,0 +1,370 @@
+@model LifeLink.Models.DonationHistory
+@{
+    Layout = null; // Standalone printable page
+    var donor = Model.Donor;
+    var user = donor?.User;
+    var certId = $"LL-CERT-{Model.DonationId:D6}";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donation Certificate - @certId - LifeLink</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Great+Vibes&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            padding: 30px 15px;
+            margin: 0;
+        }
+
+        .action-toolbar {
+            max-width: 960px;
+            margin: 0 auto 24px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .certificate-container {
+            max-width: 960px;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            border-radius: 8px;
+            padding: 24px;
+            position: relative;
+        }
+
+        .cert-outer-border {
+            border: 6px double #1e3a8a;
+            padding: 12px;
+            position: relative;
+        }
+
+        .cert-inner-border {
+            border: 2px solid #d4af37;
+            padding: 40px 48px;
+            position: relative;
+            background: radial-gradient(circle at center, #ffffff 60%, #fefcf3 100%);
+        }
+
+        .corner-ornament {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            border-color: #d4af37;
+            border-style: solid;
+        }
+        .corner-tl { top: 6px; left: 6px; border-width: 4px 0 0 4px; }
+        .corner-tr { top: 6px; right: 6px; border-width: 4px 4px 0 0; }
+        .corner-bl { bottom: 6px; left: 6px; border-width: 0 0 4px 4px; }
+        .corner-br { bottom: 6px; right: 6px; border-width: 0 4px 4px 0; }
+
+        .cert-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .cert-org {
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            letter-spacing: 4px;
+            font-size: 20px;
+            color: #b91c1c;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .cert-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            letter-spacing: 3px;
+            font-size: 34px;
+            color: #0f172a;
+            text-transform: uppercase;
+            margin: 8px 0 4px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.08);
+        }
+
+        .cert-subtitle {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .cert-presentation {
+            text-align: center;
+            font-style: italic;
+            color: #475569;
+            font-size: 16px;
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+
+        .cert-recipient {
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #1e3a8a;
+            border-bottom: 2px solid #cbd5e1;
+            display: inline-block;
+            padding: 0 40px 6px 40px;
+            margin: 0 auto 18px auto;
+        }
+
+        .cert-blood-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            padding: 6px 18px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .cert-body {
+            text-align: center;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #334155;
+            max-width: 720px;
+            margin: 0 auto 30px auto;
+        }
+
+        .cert-details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            background: rgba(241, 245, 249, 0.6);
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin-bottom: 36px;
+            text-align: center;
+        }
+
+        .cert-meta-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .cert-meta-val {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 2px;
+        }
+
+        .cert-signatures {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 40px;
+            margin-top: 20px;
+        }
+
+        .signature-block {
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .signature-line {
+            border-top: 1.5px solid #0f172a;
+            margin-top: 8px;
+            padding-top: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .signature-title {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .signature-script {
+            font-family: 'Great Vibes', cursive;
+            font-size: 32px;
+            color: #1e3a8a;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .cert-seal {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px dashed #d4af37;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #b91c1c;
+            background: #fffbeb;
+            box-shadow: 0 0 0 4px #ffffff, 0 4px 12px rgba(212, 175, 55, 0.4);
+            margin: 0 auto;
+        }
+
+        .cert-seal i {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .cert-seal span {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* Print Media Styles */
+        @@media print {
+            body {
+                background: none;
+                padding: 0;
+                margin: 0;
+            }
+            .action-toolbar {
+                display: none !important;
+            }
+            .certificate-container {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+                width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .cert-outer-border {
+                border-width: 4px;
+            }
+            .cert-inner-border {
+                padding: 30px 40px;
+            }
+            @@page {
+                size: landscape A4;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Action Toolbar (Hidden during Print/PDF) -->
+    <div class="action-toolbar">
+        <a asp-controller="Donor" asp-action="Dashboard" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        <div class="d-flex gap-2">
+            <a asp-controller="Donor" asp-action="ExportHistoryCsv" class="btn btn-outline-primary rounded-pill px-3">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i>Download History (CSV)
+            </a>
+            <button onclick="window.print()" class="btn btn-danger rounded-pill px-4 shadow-sm fw-semibold">
+                <i class="bi bi-printer-fill me-2"></i>Print / Save as PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Certificate Paper -->
+    <div class="certificate-container">
+        <div class="cert-outer-border">
+            <div class="cert-inner-border">
+                <!-- Golden Corner Ornaments -->
+                <div class="corner-ornament corner-tl"></div>
+                <div class="corner-ornament corner-tr"></div>
+                <div class="corner-ornament corner-bl"></div>
+                <div class="corner-ornament corner-br"></div>
+
+                <!-- Header -->
+                <div class="cert-header">
+                    <div class="cert-org">
+                        <i class="bi bi-droplet-fill me-1"></i>LifeLink Blood Services Network
+                    </div>
+                    <h1 class="cert-title">Certificate of Appreciation</h1>
+                    <div class="cert-subtitle">Recognizing Heroic Contribution to Humanity</div>
+                </div>
+
+                <!-- Presentation Line -->
+                <div class="cert-presentation">This is honorably presented to</div>
+
+                <!-- Recipient Name -->
+                <div class="text-center">
+                    <div class="cert-recipient">@(user?.Name ?? "Honored Blood Donor")</div>
+                </div>
+
+                <!-- Blood Group & Life Saver Badge -->
+                <div class="text-center">
+                    <div class="cert-blood-badge">
+                        <i class="bi bi-heart-pulse-fill me-2"></i>Blood Group: @(donor?.BloodGroup ?? "Verified") &nbsp;|&nbsp; LifeLink Hero
+                    </div>
+                </div>
+
+                <!-- Recognition Body -->
+                <div class="cert-body">
+                    In sincere recognition and deep gratitude for your selfless, voluntary blood donation. 
+                    Your compassionate gift of life has brought immediate hope, healing, and vital health support 
+                    to patients in critical medical need. You are a true silent hero.
+                </div>
+
+                <!-- Meta Details Grid -->
+                <div class="cert-details-grid">
+                    <div>
+                        <div class="cert-meta-label">Certificate ID</div>
+                        <div class="cert-meta-val font-monospace">@certId</div>
+                    </div>
+                    <div>
+                        <div class="cert-meta-label">Date of Donation</div>
+                        <div class="cert-meta-val">@Model.DonationDate.ToString("MMMM dd, yyyy")</div>
+                    </div>
+                    <div>
+                        <div class="cert-meta-label">Affiliated Facility</div>
+                        <div class="cert-meta-val">@(Model.Hospital?.Name ?? "LifeLink Medical Center")</div>
+                    </div>
+                </div>
+
+                <!-- Signatures & Seal -->
+                <div class="cert-signatures">
+                    <div class="signature-block">
+                        <div class="signature-script">Dr. M. Rahman</div>
+                        <div class="signature-line">Chief Medical Officer</div>
+                        <div class="signature-title">@(Model.Hospital?.Name ?? "Partner Hospital")</div>
+                    </div>
+
+                    <div class="cert-seal">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <span>Verified</span>
+                    </div>
+
+                    <div class="signature-block">
+                        <div class="signature-script">Kazi Fahim</div>
+                        <div class="signature-line">Director of Operations</div>
+                        <div class="signature-title">LifeLink Central Network</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

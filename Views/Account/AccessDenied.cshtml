@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Access Denied - LifeLink";
+}
+
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 p-5">
+                <div class="text-danger mb-4">
+                    <i class="bi bi-shield-x display-1"></i>
+                </div>
+                <h2 class="fw-bold text-dark">Access Denied (403)</h2>
+                <p class="text-muted mt-2 mb-4">
+                    You do not have the required permissions or role to view this page.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-4 py-2">
+                        <i class="bi bi-house me-1"></i>Return Home
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-danger px-4 py-2">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Switch Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

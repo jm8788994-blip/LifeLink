@@ -1,0 +1,140 @@
+# LifeLink - Blood Bank Management System
+# Project Plan
+
+## Current Project Structure (ASP.NET MVC)
+```
+LifeLink/
+├── Controllers/
+│   └── HomeController.cs
+├── Models/
+│   └── ErrorViewModel.cs
+├── Views/
+│   ├── Home/
+│   │   ├── Index.cshtml
+│   │   └── Privacy.cshtml
+│   └── Shared/
+│       ├── _Layout.cshtml
+│       ├── _Layout.cshtml.css
+│       ├── _ValidationScriptsPartial.cshtml
+│       └── Error.cshtml
+├── wwwroot/
+│   ├── css/
+│   │   └── site.css
+│   ├── js/
+│   │   └── site.js
+│   └── lib/
+├── Program.cs
+├── appsettings.json
+└── LifeLink.csproj
+```
+
+## Target Structure (After Implementation)
+```
+LifeLink/
+├── Controllers/
+│   ├── HomeController.cs          (Public website)
+│   ├── AdminController.cs         (Admin panel)
+│   ├── DonorController.cs         (Donor management)
+│   ├── RecipientController.cs     (Recipient management)
+│   └── BloodBagController.cs      (Blood bag management)
+├── Models/
+│   ├── Donor.cs
+│   ├── Recipient.cs
+│   ├── BloodBag.cs
+│   ├── Donation.cs
+│   └── ErrorViewModel.cs
+├── Views/
+│   ├── Home/                      (Public website views)
+│   │   ├── Index.cshtml           (Landing page)
+│   │   ├── About.cshtml
+│   │   ├── Contact.cshtml
+│   │   ├── DonorRegister.cshtml
+│   │   ├── RecipientRegister.cshtml
+│   │   └── BloodAvailability.cshtml
+│   ├── Admin/                     (Admin panel views)
+│   │   ├── Dashboard.cshtml
+│   │   ├── Donors.cshtml
+│   │   ├── Recipients.cshtml
+│   │   ├── BloodBags.cshtml
+│   │   ├── DonorEdit.cshtml
+│   │   └── RecipientEdit.cshtml
+│   └── Shared/
+│       ├── _Layout.cshtml         (Public layout)
+│       ├── _AdminLayout.cshtml    (Admin layout - AdminLTE)
+│       └── ...
+├── wwwroot/
+│   ├── css/
+│   │   ├── site.css
+│   │   └── public-theme.css       (Blood bank public theme)
+│   ├── js/
+│   │   └── site.js
+│   ├── admin/                     (AdminLTE assets)
+│   │   ├── css/
+│   │   ├── js/
+│   │   └── img/
+│   ├── images/                    (Website images)
+│   └── lib/
+├── Data/
+│   └── ApplicationDbContext.cs
+├── Program.cs
+└── LifeLink.csproj
+```
+
+## Phase 1: Public Website (from GitHub Template)
+Based on https://github.com/Shwetavinod15/Blood-Bank-Website
+
+### Pages to Create:
+1. **Index.cshtml** - Landing page with hero section, stats, testimonials
+2. **About.cshtml** - About the project and team
+3. **Contact.cshtml** - Contact form
+4. **DonorRegister.cshtml** - Donor registration form
+5. **RecipientRegister.cshtml** - Recipient registration form
+6. **BloodAvailability.cshtml** - Blood bag availability table
+
+### Features:
+- Responsive design
+- Blood type information
+- Testimonials section
+- Statistics cards (Lives Saved, Donors, Blood Units)
+- Registration forms with validation
+
+## Phase 2: Admin Panel (AdminLTE v4)
+Based on https://adminlte.io/themes/v4/
+
+### Pages to Create:
+1. **Dashboard.cshtml** - Overview with charts and stats
+2. **Donors.cshtml** - Donor management table (CRUD)
+3. **Recipients.cshtml** - Recipient management table (CRUD)
+4. **BloodBags.cshtml** - Blood bag inventory management
+5. **DonorEdit.cshtml** - Edit donor details
+6. **RecipientEdit.cshtml** - Edit recipient details
+
+### AdminLTE Components to Use:
+- Sidebar navigation
+- Data tables
+- Info boxes for stats
+- Charts (ApexCharts)
+- Forms for CRUD operations
+- Modal dialogs
+
+## Phase 3: Models & Database
+### Models to Create:
+1. **Donor.cs** - Name, BloodType, Contact, Email, Address, LastDonation
+2. **Recipient.cs** - Name, BloodType, Contact, Email, HospitalName
+3. **BloodBag.cs** - BloodType, Quantity, ExpiryDate, Status
+4. **Donation.cs** - DonorId, BloodBagId, DonationDate
+
+## Implementation Order:
+1. Set up AdminLTE assets in wwwroot/admin/
+2. Create _AdminLayout.cshtml with AdminLTE template
+3. Create public website views from GitHub template
+4. Create admin panel views
+5. Create Models
+6. Update Controllers
+7. Add navigation between public and admin
+
+## Notes:
+- Public website: Clean, modern, blood donation themed
+- Admin panel: Professional dashboard with data management
+- Use Bootstrap 5 (comes with AdminLTE)
+- Keep file structure clean and organized

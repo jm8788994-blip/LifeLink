@@ -1,0 +1,23 @@
+# Git এ ইগনোর করার ফাইল তালিকা
+
+## Build outputs
+bin/
+obj/
+
+## Visual Studio files
+.vs/
+*.user
+*.suo
+
+## User secrets
+appsettings.Development.json
+
+## OS files
+.DS_Store
+Thumbs.db
+
+## Logs
+*.log
+
+## Temp files
+*.tmp

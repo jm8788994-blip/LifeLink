@@ -1,0 +1,109 @@
+@model LifeLink.Models.BloodRequest
+@{
+    ViewData["Title"] = "Edit Blood Request";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var hospitals = ViewBag.Hospitals as List<LifeLink.Models.Hospital> ?? new List<LifeLink.Models.Hospital>();
+}
+
+<!-- Content Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="mb-0">Edit Blood Request #@Model.RequestId</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Recipients">Recipients</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title"><i class="bi bi-pencil-square me-2"></i>Blood Request Details</h3>
+            </div>
+            <div class="card-body">
+                <form asp-controller="Admin" asp-action="RecipientEdit" asp-route-id="@Model.RequestId" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Patient Name</label>
+                            <input type="text" class="form-control" value="@(Model.Receiver?.Name)" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="@(Model.Receiver?.Email)" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" value="@(Model.Receiver?.Phone)" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Blood Group *</label>
+                            <select name="bloodGroup" class="form-select" required>
+                                <option value="A+" selected="@(Model.BloodGroup == "A+")">A+</option>
+                                <option value="A-" selected="@(Model.BloodGroup == "A-")">A-</option>
+                                <option value="B+" selected="@(Model.BloodGroup == "B+")">B+</option>
+                                <option value="B-" selected="@(Model.BloodGroup == "B-")">B-</option>
+                                <option value="AB+" selected="@(Model.BloodGroup == "AB+")">AB+</option>
+                                <option value="AB-" selected="@(Model.BloodGroup == "AB-")">AB-</option>
+                                <option value="O+" selected="@(Model.BloodGroup == "O+")">O+</option>
+                                <option value="O-" selected="@(Model.BloodGroup == "O-")">O-</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quantity (Units) *</label>
+                            <input type="number" name="quantity" class="form-control" value="@Model.Quantity" min="1" max="50" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Hospital</label>
+                            <select name="hospitalId" class="form-select">
+                                <option value="">Select Hospital</option>
+                                @foreach (var h in hospitals)
+                                {
+                                    <option value="@h.HospitalId" selected="@(Model.HospitalId == h.HospitalId)">@h.Name (@h.Location)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Emergency Level *</label>
+                            <select name="emergencyLevel" class="form-select" required>
+                                <option value="Normal" selected="@(Model.EmergencyLevel == "Normal")">Normal</option>
+                                <option value="Urgent" selected="@(Model.EmergencyLevel == "Urgent")">Urgent</option>
+                                <option value="Critical" selected="@(Model.EmergencyLevel == "Critical")">Critical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Required Date</label>
+                            <input type="date" name="requiredDate" class="form-control" value="@(Model.RequiredDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Request Status *</label>
+                            <select name="status" class="form-select" required>
+                                <option value="Pending" selected="@(Model.Status == "Pending")">Pending</option>
+                                <option value="Approved" selected="@(Model.Status == "Approved")">Approved</option>
+                                <option value="Completed" selected="@(Model.Status == "Completed")">Completed</option>
+                                <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-danger px-4 me-2">
+                                <i class="bi bi-check-circle me-1"></i>Save Changes
+                            </button>
+                            <a asp-controller="Admin" asp-action="Recipients" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+আমি আপনার দেওয়া SDPProposal.pdf সম্পূর্ণ বিশ্লেষণ করেছি এবং আপনার বর্তমান প্রজেক্টের কোডবেস (LifeLink এর Controllers, Models, Views, Data, Program.cs) এর সাথে পুঙ্খানুপুঙ্খভাবে মিলিয়ে দেখেছি।
+
+নিচে বর্তমানে কী কী কাজ সম্পন্ন হয়েছে, প্রস্তাবনা (PDF) অনুযায়ী কোন কোন কাজ এখনো বাকি আছে, এবং টিম মেম্বারদের দায়িত্ব অনুযায়ী বিস্তারিত তালিকা দেওয়া হলো:
+
+১. ইতিমধ্যে যা যা সম্পন্ন হয়েছে (Completed Features)
+ডাটাবেজ ও মডেলস (Database & Models):
+ER ডায়াগ্রামের ১০টি মূল সত্তা ও মডেল তৈরি করা হয়েছে (User, Role, DonorProfile, Hospital, BloodRequest, DonationHistory, BloodStock, Notification, Rating, ChatMessage)।
+PostgreSQL এবং EF Core সংযোগ ও প্রাথমিক সীডিং (DbInitializer) কনফিগার করা হয়েছে।
+পাবলিক ফ্রন্টএন্ড (Public Website):
+হোম পেজ (Index.cshtml), About, Contact পেজ।
+ডোনার রেজিস্ট্রেশন ফর্ম (DonorRegister.cshtml)।
+রিসিভার ব্লাড রিকোয়েস্ট ফর্ম (RecipientRegister.cshtml)।
+ব্লাড স্টক বা অ্যাভেইলেবিলিটি তালিকা (BloodAvailability.cshtml)।
+বেসিক অ্যাডমিন প্যানেল (AdminLTE Dashboard):
+অ্যাডমিন ড্যাশবোর্ড ওভারভিউ ও স্ট্যাটস (Dashboard.cshtml)।
+ডোনার তালিকা ও সাধারণ CRUD (Donors.cshtml, DonorEdit.cshtml)।
+রিকোয়েস্ট ম্যানেজমেন্ট ও স্ট্যাটাস আপডেট (Recipients.cshtml, RecipientEdit.cshtml)।
+ব্লাড স্টক ইনভেন্টরি পেজ (BloodBags.cshtml)।
+======
+২. যা যা এখনো বাকি আছে (Pending / Remaining Work)
+পিডিএফের Section 4 (Features), Section 7-8 (Implementation & AI) এবং Section 9 (Member Contributions) অনুযায়ী নিচের কাজগুলো বাকি আছে:
+
+ক. অথেনটিকেশন, রোল ও সিকিউরিটি (Authentication & Authorization)
+প্রকৃত লগইন ও লগআউট সিস্টেম: বর্তমানে কোনো রিয়েল অথেনটিকেশন বা সেশন নেই (পাসওয়ার্ড হার্ডকোড করা "donor@123" আকারে সেভ হচ্ছে)। ASP.NET Core Identity বা Cookie Authentication যোগ করে পাসওয়ার্ড হ্যাশিং (Password Hashing) নিশ্চিত করা।
+রোল-ভিত্তিক এক্সেস কন্ট্রোল (RBAC): বর্তমানে অ্যাডমিন প্যানেলে যেকেউ সরাসরি URL দিয়ে ঢুকতে পারে। [Authorize(Roles = "Admin")] এবং অন্যান্য রোল অনুযায়ী প্রোটেকশন চালু করা।
+ইমেইল ও OTP ভেরিফিকেশন (PDF 4.18): ইউজার রেজিস্ট্রেশন বা পাসওয়ার্ড রিসেটের জন্য Email/OTP ভেরিফিকেশন।
+রোল-স্পেসিফিক আলাদা ড্যাশবোর্ড (PDF 7.2):
+Donor Dashboard: ডোনার নিজের প্রোফাইল দেখবে, অ্যাভেইলেবিলিটি অন/অফ করবে, তার জন্য আসা রিকোয়েস্ট গ্রহণ/প্রত্যাখ্যান (Accept/Reject) করবে, পূর্ববর্তী ডোনেশন হিস্ট্রি দেখবে।
+Receiver Dashboard: রিসিভার তার সাবমিট করা ব্লাড রিকোয়েস্টের লাইভ স্ট্যাটাস ও ম্যাচ হওয়া ডোনারদের দেখবে।
+Hospital Dashboard: হাসপাতাল কর্তৃপক্ষ নিজস্ব ব্লাড স্টক এন্ট্রি, আপডেট ও আসন্ন রিকোয়েস্ট হ্যান্ডেল করবে।
+খ. কৃত্রিম বুদ্ধিমত্তা ও মেশিন লার্নিং (AI & Machine Learning) — প্রজেক্টের মূল ইনোভেশন
+পিডিএফ অনুযায়ী এটি প্রজেক্টের প্রধান আকর্ষণ হলেও এটি এখনো প্রোজেক্টে যোগ করা হয়নি:
+
+AI-Powered Smart Donor Matching (PDF 4.4, Figure 2):
+ব্লাড গ্রুপ কমপ্যাটিবিলিটি, রোগীর সাথে ডোনারের দূরত্ব (Distance), অ্যাভেইলেবিলিটি, এলিজিবিলিটি (সর্বশেষ রক্তদানের সময়), রেসপন্স রেট ও এমার্জেন্সি লেভেল মিলিয়ে একটি Donor Match Score (%) তৈরি করা এবং ডোনারদের র‍্যাঙ্ক করে সাজানো।
+AI Donor Response Prediction (PDF 4.5):
+পূর্ববর্তী ব্যবহারের উপর ভিত্তি করে একজন ডোনারের রিকোয়েস্টে সাড়া দেওয়ার সম্ভাব্যতা (%) প্রেডিক্ট করা।
+AI Blood Demand Forecasting (PDF 4.6):
+অতীতে কোন ব্লাড গ্রুপের চাহিদা বেশি ছিল এবং ভবিষ্যতে কোন মাসে কেমন চাহিদা হতে পারে তা প্রেডিক্ট করা (ML.NET ব্যবহার করে)।
+AI Blood Stock Shortage Prediction (PDF 4.7):
+বর্তমান স্টক এবং চাহিদার তুলনা করে রক্ত সংকট (Shortage Risk: HIGH/MEDIUM) আগে থেকেই সতর্কবার্তা দেওয়া।
+AI Assistant Chatbot (PDF 4.8):
+প্ল্যাটফর্মে ডোনার রেজিস্ট্রেশন ও রক্ত খোঁজার জন্য একটি নেভিগেশনাল চ্যাটবট।
+গ. রিয়েল-টাইম ফিচারস ও নোটিফিকেশন (SignalR)
+Real-Time Live Chat (PDF 4.11): ডোনার, রিসিভার এবং হাসপাতালের মধ্যে লাইভ মেসেজিং (SignalR Hub এর মাধ্যমে)। ChatMessage টেবিল রয়েছে কিন্তু এর কোনো চ্যাট ইন্টারফেস নেই।
+Real-Time Push/Toast Notifications (PDF 4.10): এমার্জেন্সি রিকোয়েস্ট এলে পেজ রিফ্রেশ ছাড়াই সাথে সাথে বেল নোটিফিকেশন ও টোস্ট পপ-আপ আসা।
+ঘ. ম্যাপ ও লোকেশন ভিত্তিক সার্চ (Location-Based Search)
+Google Maps API অথবা OpenStreetMap / Leaflet (PDF 4.9):
+ডোনার ও হাসপাতালের লোকেশন ম্যাপে পিনপয়েন্ট করা।
+রোগী/হাসপাতাল থেকে ডোনারের দূরত্ব (Distance in KM) স্বয়ংক্রিয়ভাবে ক্যালকুলেট করে AI ম্যাচিংয়ে পাঠানো।
+ঙ. ডোনার এলিজিবিলিটি ও ডোনেশন সাইকেল (Donor Lifecycle)
+স্বয়ংক্রিয় এলিজিবিলিটি ক্যালকুলেশন (PDF 4.13): শেষ রক্তদানের তারিখ থেকে ৯০/১২০ দিন পার হয়েছে কিনা তা যাচাই করে স্বয়ংক্রিয়ভাবে "Eligible" বা কত দিন বাকি আছে তার কাউন্টডাউন দেখানো।
+রক্তদান সম্পন্ন হওয়ার কমপ্লিট ফ্লো: ডোনার রিকোয়েস্ট গ্রহণ করার পর হাসপাতাল বা রিসিভার কর্তৃক ডোনেশন "Completed" মার্ক করা, স্বয়ংক্রিয়ভাবে ডোনেশন হিস্ট্রি ও ব্লাড স্টক আপডেট হওয়া।
+চ. রেটিং, ফিডব্যাক ও প্রোফাইল ইমেজ
+Rating & Feedback UI (PDF 4.19): ডোনেশন শেষে ডোনার বা রিসিভারকে স্টার রেটিং ও রিভিউ দেওয়ার ইন্টারফেস।
+File / Image Upload (PDF 4.17): ইউজার প্রোফাইল পিকচার এবং হাসপাতালের ভেরিফিকেশন ডকুমেন্ট আপলোড ও প্রিভিউ।
+ছ. বোনাস / অ্যাডিশনাল ফিচারস ও টেস্টিং (PDF 4.21 & 8.1)
+PDF ও Excel Export: ডোনেশন সার্টিফিকেট জেনারেশন এবং ব্লাড স্টক রিপোর্ট PDF/Excel ডাউনলোড।
+Swagger / OpenAPI: ব্যাকএন্ড API গুলো টেস্ট করার জন্য Swagger ইন্টিগ্রেশন।
+Unit Testing & Security Hardening: XSS, CSRF ও ভ্যালিডেশন আরও জোরদার করা।
+৩. প্রপোজালে উল্লেখিত ৪ জন টিম মেম্বারের কাজ অনুযায়ী সামারি:
+টিম মেম্বার	দায়িত্বের ক্ষেত্র (Proposal অনুযায়ী)	বর্তমান অবস্থা	যা যা করতে হবে
+Member 1 (Backend, Auth, Security)	Architecture, Identity Auth, Role-based access, REST APIs, Security	আংশিক সম্পন্ন	রিয়েল Login/Logout, Password Hashing, RBAC Middleware, Error Logging, Swagger
+Member 2 (Database, Hospital & Stock)	DB normalization, Hospital & Blood Stock, Donation History, Eligibility	অধিকাংশ DB তৈরি	Hospital নিজস্ব পোর্টাল/ড্যাশবোর্ড, ডোনেশন কমপ্লিশন ও হিস্ট্রি ট্র্যাকিং, ৯৪ দিনের এলিজিবিলিটি লজিক
+Member 3 (AI & Smart Matching)	ML.NET Smart Donor Matching, Donor Response Prediction, Demand Forecasting	এখনো শুরু হয়নি	ML.NET মডেল ট্রেনিং/ইমপ্লিমেন্টেশন, স্কোরিং অ্যালগরিদম (Figure 2), ডিমান্ড প্রেডিকশন
+Member 4 (Frontend, UI/UX & Realtime)	SignalR Chat & Notifications, Maps (Leaflet/Google), Dashboards, Chart.js	আংশিক সম্পন্ন	SignalR লাইভ চ্যাট ও নোটিফিকেশন, ম্যাপ ইন্টিগ্রেশন, ডোনার/রিসিভার/হসপিটাল ড্যাশবোর্ড
+পরামর্শ (Next Priority Step):
+আপনার প্রজেক্টের জন্য সবচেয়ে জরুরি দুটি ধাপ হলো:
+
+অথেনটিকেশন ও আলাদা ড্যাশবোর্ড তৈরি করা (যাতে ডোনার ও হাসপাতাল লগইন করে তাদের ডেটা দেখতে পারে)।
+AI Smart Donor Matching এবং SignalR Real-Time Notification যোগ করা (যেটি এই প্রজেক্ট ও ডিফেন্সের মূল আকর্ষণ)।
+আপনি চাইলে যেকোনো একটি মডিউল (যেমন: Login/Auth System, Smart Donor Matching Algorithm, অথবা SignalR Notification) দিয়ে কাজ শুরু করতে পারেন। কোনটি দিয়ে শুরু করতে চান জানালে আমি সাথে সাথে কোড প্রস্তুত করে দেব!

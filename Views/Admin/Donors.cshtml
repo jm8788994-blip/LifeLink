@@ -1,0 +1,184 @@
+@model IEnumerable<LifeLink.Models.DonorProfile>
+@{
+    ViewData["Title"] = "Manage Donors";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Content Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="mb-0">Donors Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
+                    <li class="breadcrumb-item active">Donors</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center g-2">
+                    <div class="col-md-4">
+                        <h3 class="card-title">All Registered Donors (@(Model?.Count() ?? 0))</h3>
+                    </div>
+                    <div class="col-md-5">
+                        <form method="get" asp-controller="Admin" asp-action="Donors" class="d-flex gap-2">
+                            <select name="bloodType" class="form-select form-select-sm" style="max-width: 140px;" onchange="this.form.submit()">
+                                <option value="All" selected="@(ViewBag.BloodType == "All")">All Blood</option>
+                                <option value="A+" selected="@(ViewBag.BloodType == "A+")">A+</option>
+                                <option value="A-" selected="@(ViewBag.BloodType == "A-")">A-</option>
+                                <option value="B+" selected="@(ViewBag.BloodType == "B+")">B+</option>
+                                <option value="B-" selected="@(ViewBag.BloodType == "B-")">B-</option>
+                                <option value="AB+" selected="@(ViewBag.BloodType == "AB+")">AB+</option>
+                                <option value="AB-" selected="@(ViewBag.BloodType == "AB-")">AB-</option>
+                                <option value="O+" selected="@(ViewBag.BloodType == "O+")">O+</option>
+                                <option value="O-" selected="@(ViewBag.BloodType == "O-")">O-</option>
+                            </select>
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Search donor..." value="@ViewBag.Search" />
+                                <button class="btn btn-danger" type="submit"><i class="bi bi-search"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-3 text-end d-flex gap-2 justify-content-end">
+                        <a asp-controller="Admin" asp-action="ExportDonorsCsv" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-file-earmark-excel me-1"></i>Export CSV
+                        </a>
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addDonorModal">
+                            <i class="bi bi-plus-lg me-1"></i>Add New Donor
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle" id="donorsTable">
+                        <thead class="table-danger">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Blood Type</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var donor in Model)
+                                {
+                                    var isAvailable = donor.Availability;
+                                    <tr>
+                                        <td>@donor.DonorId</td>
+                                        <td><strong>@(donor.User?.Name ?? "N/A")</strong></td>
+                                        <td>@(donor.User?.Email ?? "N/A")</td>
+                                        <td>@(donor.User?.Phone ?? "N/A")</td>
+                                        <td><span class="badge bg-danger fs-6">@donor.BloodGroup</span></td>
+                                        <td>@donor.Location</td>
+                                        <td>
+                                            <span class="badge @(isAvailable ? "bg-success" : "bg-warning text-dark")">
+                                                @(isAvailable ? "Available" : "Unavailable")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a asp-controller="Admin" asp-action="DonorEdit" asp-route-id="@donor.DonorId" class="btn btn-sm btn-info" title="Edit Donor">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form asp-controller="Admin" asp-action="DonorDelete" asp-route-id="@donor.DonorId" method="post" onsubmit="return confirm('Are you sure you want to remove this donor?');" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete Donor">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">No donors found in the database.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Donor Modal -->
+<div class="modal fade" id="addDonorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Add New Donor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Admin" asp-action="DonorAdd" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="fullName" class="form-control" placeholder="Enter full name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" name="email" class="form-control" placeholder="Enter email" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+880-1..." required />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Blood Type *</label>
+                            <select name="bloodType" class="form-select" required>
+                                <option value="">Select Blood</option>
+                                <option>A+</option><option>A-</option>
+                                <option>B+</option><option>B-</option>
+                                <option>O+</option><option>O-</option>
+                                <option>AB+</option><option>AB-</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date of Birth *</label>
+                            <input type="date" name="dateOfBirth" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Location / Address *</label>
+                        <input type="text" name="address" class="form-control" placeholder="City or area (e.g. Dhaka, Chittagong)" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-check-circle me-1"></i>Save Donor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

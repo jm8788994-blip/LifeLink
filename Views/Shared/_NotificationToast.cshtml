@@ -1,0 +1,142 @@
+<!-- SignalR Real-Time Toast Container (PDF 4.10) -->
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;" id="lifelink-toast-container"></div>
+</div>
+
+<!-- SignalR JavaScript Client (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+<script>
+    (function () {
+        // Initialize SignalR Hub Connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/lifelink")
+            .withAutomaticReconnect([0, 2000, 5000, 10000])
+            .configureLogging(signalR.LogLevel.Warning)
+            .build();
+
+        window.signalRConnection = connection;
+
+        // 1. Real-Time Emergency Request Broadcast Listener
+        connection.on("ReceiveEmergencyAlert", function (alertData) {
+            playNotificationSound();
+            showEmergencyToast(alertData);
+            incrementNotificationBadge();
+        });
+
+        // 2. Direct User Notification Listener
+        connection.on("ReceiveNotification", function (data) {
+            playNotificationSound();
+            showCustomToast(data.title || "Notification", data.message, data.type || "info", data.url);
+            incrementNotificationBadge();
+        });
+
+        // 3. Direct Chat Message Toast (if not currently in active chat page with that sender)
+        connection.on("ReceiveMessage", function (msg) {
+            // Check if current page is chat with this user
+            if (typeof targetUserId !== 'undefined' && targetUserId === msg.senderId) {
+                // Already inside active chat with this user, handled by Chat page
+                return;
+            }
+            playNotificationSound();
+            showCustomToast(`New Message from ${msg.senderName}`, msg.message, "danger", `/Chat?withUserId=${msg.senderId}`);
+        });
+
+        // Start Connection if Authenticated
+        connection.start()
+            .then(function () {
+                console.log("LifeLink SignalR Real-Time Hub Connected.");
+                document.dispatchEvent(new Event("signalRConnected"));
+            })
+            .catch(function (err) {
+                console.warn("SignalR connection skipped or delayed:", err.toString());
+            });
+
+        // Toast Helper: Emergency Alert
+        function showEmergencyToast(data) {
+            const container = document.getElementById("lifelink-toast-container");
+            const toastEl = document.createElement("div");
+            toastEl.className = "toast align-items-center text-white bg-danger border-0 shadow-lg mb-2 rounded-4 overflow-hidden";
+            toastEl.setAttribute("role", "alert");
+            toastEl.setAttribute("aria-live", "assertive");
+            toastEl.setAttribute("aria-atomic", "true");
+            toastEl.innerHTML = `
+                <div class="toast-header bg-danger text-white border-bottom border-danger-subtle">
+                    <span class="badge bg-white text-danger me-2"><i class="bi bi-exclamation-triangle-fill"></i> URGENT</span>
+                    <strong class="me-auto">${data.bloodGroup} Blood Needed!</strong>
+                    <small class="text-white-50">${data.timestamp || 'Just Now'}</small>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body p-3">
+                    <p class="mb-2 small">${data.message}</p>
+                    <div class="d-flex gap-2">
+                        <a href="${data.url || '/Donor/Dashboard'}" class="btn btn-sm btn-light text-danger fw-semibold px-3 rounded-pill">View & Respond</a>
+                        <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-2" data-bs-dismiss="toast">Dismiss</button>
+                    </div>
+                </div>`;
+
+            container.appendChild(toastEl);
+            const bsToast = new bootstrap.Toast(toastEl, { delay: 10000 });
+            bsToast.show();
+        }
+
+        // Toast Helper: Custom Notification
+        function showCustomToast(title, message, type, url) {
+            const container = document.getElementById("lifelink-toast-container");
+            const toastEl = document.createElement("div");
+            const bgClass = type === "danger" ? "bg-danger" : (type === "success" ? "bg-success" : (type === "warning" ? "bg-warning text-dark" : "bg-primary"));
+            
+            toastEl.className = `toast border-0 shadow-lg mb-2 rounded-4 overflow-hidden text-white ${bgClass}`;
+            toastEl.setAttribute("role", "alert");
+            toastEl.innerHTML = `
+                <div class="toast-header ${bgClass} text-white border-bottom border-white border-opacity-25">
+                    <i class="bi bi-bell-fill me-2"></i>
+                    <strong class="me-auto">${escapeHtml(title)}</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body p-3">
+                    <p class="mb-1 small">${escapeHtml(message)}</p>
+                    ${url ? `<a href="${url}" class="btn btn-xs btn-light text-dark fw-semibold mt-2 px-3 rounded-pill small">View Details &rarr;</a>` : ''}
+                </div>`;
+
+            container.appendChild(toastEl);
+            const bsToast = new bootstrap.Toast(toastEl, { delay: 6000 });
+            bsToast.show();
+        }
+
+        function incrementNotificationBadge() {
+            const badge = document.getElementById("navbar-notification-badge");
+            if (badge) {
+                badge.classList.remove("d-none");
+                let count = parseInt(badge.textContent || "0");
+                badge.textContent = count + 1;
+            }
+        }
+
+        function playNotificationSound() {
+            try {
+                // Gentle audio tone using Web Audio API (Zero external assets needed)
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.35);
+            } catch (e) {
+                // Audio context restriction silently bypassed
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    })();
+</script>

@@ -1,0 +1,221 @@
+@{
+    ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container position-relative" style="z-index:1;">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1>Donate Blood, Save Lives</h1>
+                <p class="lead">Your single donation can save up to three lives. Join our community of heroes and make a difference today.</p>
+                <div class="d-flex gap-3">
+                    <a asp-controller="Home" asp-action="DonorRegister" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-hand-holding-heart me-2"></i>Become a Donor
+                    </a>
+                    <a asp-controller="Home" asp-action="BloodAvailability" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-tint me-2"></i>Check Availability
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center d-none d-lg-block">
+                <i class="fas fa-heartbeat" style="font-size:15rem; opacity:0.2;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-heart"></i></div>
+                    <h3>@(ViewBag.LivesSaved != null ? ViewBag.LivesSaved.ToString() : "1,250")</h3>
+                    <p>Lives Saved</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <h3>@(ViewBag.TotalDonors != null ? ViewBag.TotalDonors.ToString() : "3,500")</h3>
+                    <p>Registered Donors</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-tint"></i></div>
+                    <h3>@(ViewBag.TotalBloodUnits != null ? ViewBag.TotalBloodUnits.ToString() : "5,000")</h3>
+                    <p>Blood Units in Stock</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Blood Types Section -->
+<section class="blood-type-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>Blood Types We Collect</h2>
+            <p class="text-muted mt-3">All blood types are needed to maintain a healthy blood supply</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">A+</div>
+                    <h5>A Positive</h5>
+                    <p class="text-muted">Needed by 34% of patients</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">A-</div>
+                    <h5>A Negative</h5>
+                    <p class="text-muted">Needed by 6% of patients</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">B+</div>
+                    <h5>B Positive</h5>
+                    <p class="text-muted">Needed by 9% of patients</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">B-</div>
+                    <h5>B Negative</h5>
+                    <p class="text-muted">Needed by 2% of patients</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">O+</div>
+                    <h5>O Positive</h5>
+                    <p class="text-muted">Needed by 38% of patients</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">O-</div>
+                    <h5>O Negative</h5>
+                    <p class="text-muted">Universal donor type</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">AB+</div>
+                    <h5>AB Positive</h5>
+                    <p class="text-muted">Needed by 7% of patients</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="blood-type-card">
+                    <div class="blood-type-badge">AB-</div>
+                    <h5>AB Negative</h5>
+                    <p class="text-muted">Needed by 1% of patients</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works">
+    <div class="container">
+        <div class="section-title">
+            <h2>How It Works</h2>
+            <p class="text-muted mt-3">Simple steps to donate blood and save lives</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4>Register as Donor</h4>
+                    <p class="text-muted">Fill out our simple registration form with your details and blood type.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4>Get Matched</h4>
+                    <p class="text-muted">When someone needs your blood type, we'll connect you with them.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4>Save a Life</h4>
+                    <p class="text-muted">Donate blood at the nearest center and become a hero.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-section">
+    <div class="container">
+        <div class="section-title">
+            <h2>What People Say</h2>
+            <p class="text-muted mt-3">Stories from our donors and recipients</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Ahmed+Khan&background=dc3545&color=fff" alt="Ahmed Khan" class="me-3" />
+                        <div>
+                            <h6 class="mb-0">Ahmed Khan</h6>
+                            <small class="text-muted">Regular Donor</small>
+                        </div>
+                    </div>
+                    <p class="text-muted">"Donating blood through LifeLink was the best decision I ever made. Knowing that my donation can save lives gives me immense satisfaction."</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Fatima+Ahmed&background=28a745&color=fff" alt="Fatima Ahmed" class="me-3" />
+                        <div>
+                            <h6 class="mb-0">Fatima Ahmed</h6>
+                            <small class="text-muted">Recipient</small>
+                        </div>
+                    </div>
+                    <p class="text-muted">"LifeLink connected me with a donor when I needed blood urgently. I'm forever grateful for this wonderful platform."</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Rahul+Das&background=007bff&color=fff" alt="Rahul Das" class="me-3" />
+                        <div>
+                            <h6 class="mb-0">Rahul Das</h6>
+                            <small class="text-muted">Volunteer</small>
+                        </div>
+                    </div>
+                    <p class="text-muted">"As a volunteer, I've seen firsthand how blood donation transforms lives. LifeLink makes the process seamless and impactful."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="mb-3">Ready to Make a Difference?</h2>
+        <p class="lead mb-4">Join thousands of donors who are saving lives every day</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a asp-controller="Home" asp-action="DonorRegister" class="btn btn-light btn-lg px-4">
+                <i class="fas fa-heart me-2"></i>Register Now
+            </a>
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-outline-light btn-lg px-4">
+                <i class="fas fa-phone me-2"></i>Contact Us
+            </a>
+        </div>
+    </div>
+</section>

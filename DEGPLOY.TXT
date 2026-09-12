@@ -1,0 +1,94 @@
+10:28 PM
+LifeLink - Free Online Hosting গাইড 🚀
+তোমার project এ ASP.NET Core 10 + PostgreSQL + ML.NET + SignalR আছে, তাই সঠিক platform বেছে নেওয়া গুরুত্বপূর্ণ। নিচে ৩টি সেরা বিকল্প দেওয়া হলো:
+
+✅ Option 1: Railway.app (সবচেয়ে সহজ — সুপারিশকৃত)
+কেন: Docker ছাড়াই deploy করা যায়, PostgreSQL built-in, SignalR & ML.NET সাপোর্ট করে।
+
+ধাপ ১ — Dockerfile তৈরি করো
+প্রজেক্টের root এ (D:\Premier\5th-6th-3rd\sdp\LifeLink\) এই ফাইলটি বানাও:
+
+dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY ["LifeLink.csproj", "."]
+RUN dotnet restore
+COPY . .
+RUN dotnet build -c Release -o /app/build
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "LifeLink.dll"]
+ধাপ ২ — appsettings.Production.json তৈরি করো
+json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "${DATABASE_URL}"
+  }
+}
+ধাপ ৩ — GitHub এ Push করো
+powershell
+cd D:\Premier\5th-6th-3rd\sdp\LifeLink
+git init
+git add .
+git commit -m "LifeLink SDP Project"
+git remote add origin https://github.com/তোমার-username/LifeLink.git
+git push -u origin main
+ধাপ ৪ — Railway তে Deploy
+railway.app → GitHub দিয়ে login
+"New Project" → "Deploy from GitHub repo"
+তোমার LifeLink repo select করো
+"Add Plugin" → PostgreSQL → Railway নিজেই DATABASE_URL সেট করবে
+Variables tab এ যাও, এগুলো add করো:
+ASPNETCORE_ENVIRONMENT = Production
+ASPNETCORE_URLS = http://0.0.0.0:8080
+Deploy হবে! তোমাকে একটা URL দেবে যেমন: lifelink.up.railway.app
+Free Tier: $5 credit/মাস (ছোট project এর জন্য যথেষ্ট)
+
+✅ Option 2: Azure for Students (সবচেয়ে Professional)
+কেন: Microsoft এর নিজের platform, .NET এর জন্য সেরা, ১০০% বিনামূল্যে $100 ক্রেডিট — শুধু student email দিয়ে।
+
+👉 azure.microsoft.com/free/students
+   → Student email দিয়ে signup করো
+   → $100 credit পাবে (credit card লাগবে না!)
+Azure তে Deploy:
+powershell
+# Azure CLI install করো, তারপর:
+az login
+az group create --name LifeLinkRG --location eastasia
+az appservice plan create --name LifeLinkPlan --resource-group LifeLinkRG --sku FREE
+az webapp create --name lifelink-sdp --resource-group LifeLinkRG --plan LifeLinkPlan --runtime "DOTNETCORE:10.0"
+# PostgreSQL (Flexible Server — free tier):
+az postgres flexible-server create --name lifelink-db --resource-group LifeLinkRG --sku-name Standard_B1ms
+# Deploy:
+dotnet publish -c Release
+az webapp deploy --resource-group LifeLinkRG --name lifelink-sdp --src-path ./bin/Release/net10.0/publish
+✅ Option 3: Render.com (মাঝারি সহজ)
+render.com → GitHub login
+"New Web Service" → GitHub repo connect
+Settings:
+Environment: Docker
+Build Command: dotnet publish -c Release
+Start Command: dotnet LifeLink.dll
+"New PostgreSQL" → Database তৈরি করো → Connection string copy করো
+Environment Variable: ConnectionStrings__DefaultConnection = (copied string)
+📊 তুলনামূলক সারসংক্ষেপ
+Feature	Railway	Azure Students	Render
+সহজতা	⭐⭐⭐⭐⭐	⭐⭐⭐	⭐⭐⭐⭐
+Free Limit	$5/মাস	$100 total	750 hrs/মাস
+PostgreSQL	✅ Built-in	✅ Built-in	✅ Built-in
+SignalR/WebSocket	✅	✅	✅
+ML.NET	✅	✅	✅
+Student Friendly	✅	✅✅ (best)	✅
+Custom Domain	✅	✅	✅
+🎯 আমার সুপারিশ
+SDP Presentation এর জন্য → Railway.app দিয়ে শুরু করো। সবচেয়ে সহজ, ৫ মিনিটে live হয়।
+
+Long-term / Professional এর জন্য → Azure for Students। Student email থাকলে সম্পূর্ণ বিনামূল্যে $100 ক্রেডিট পাবে।
+
+চাইলে আমি Dockerfile এবং appsettings.Production.json তৈরি করে দিতে পারি — শুধু বলো কোন platform এ deploy করতে চাও!

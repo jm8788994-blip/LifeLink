@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - LifeLink Blood Bank</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/public-theme.css" asp-append-version="true" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                <i class="fas fa-heartbeat me-2"></i>LifeLink
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="About">
+                            <i class="fas fa-info-circle me-1"></i>About Us
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="BloodAvailability">
+                            <i class="fas fa-tint me-1"></i>Blood Availability
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Contact">
+                            <i class="fas fa-envelope me-1"></i>Contact
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav align-items-center">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        var userRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "Donor";
+                        string dashboardAction = "Dashboard";
+                        string dashboardController = userRole switch
+                        {
+                            "Admin" => "Admin",
+                            "Donor" => "Donor",
+                            "Receiver" => "Receiver",
+                            "Hospital" => "Hospital",
+                            _ => "Home"
+                        };
+
+                        <li class="nav-item me-2">
+                            <a class="nav-link text-white position-relative" asp-controller="Chat" asp-action="Index" title="Live Messages">
+                                <i class="bi bi-chat-dots-fill fs-5"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item me-3">
+                            <span class="nav-link text-white position-relative" role="button" title="Live Alerts">
+                                <i class="bi bi-bell-fill fs-5"></i>
+                                <span id="navbar-notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" style="font-size: 10px;">0</span>
+                            </span>
+                        </li>
+                        <li class="nav-item me-2">
+                            <a class="btn btn-light btn-sm text-danger fw-semibold px-3 shadow-sm" asp-controller="@dashboardController" asp-action="@dashboardAction">
+                                <i class="bi bi-speedometer2 me-1"></i>@userRole Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1"></i>@User.Identity.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li class="px-3 py-1 text-muted small">
+                                    Role: <strong class="text-danger">@userRole</strong>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="@dashboardController" asp-action="@dashboardAction">
+                                        <i class="bi bi-grid me-2"></i>My Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white me-2" asp-controller="Account" asp-action="Login">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light btn-sm px-3 fw-semibold" asp-controller="Account" asp-action="Register">
+                                <i class="bi bi-person-plus me-1"></i>Register
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer class="bg-dark text-light py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="text-danger"><i class="fas fa-heartbeat me-2"></i>LifeLink</h5>
+                    <p class="text-muted">Connecting donors with those in need. Every drop counts, every donation saves a life.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h6 class="text-uppercase">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a asp-controller="Home" asp-action="DonorRegister" class="text-muted text-decoration-none">Become a Donor</a></li>
+                        <li><a asp-controller="Home" asp-action="RecipientRegister" class="text-muted text-decoration-none">Request Blood</a></li>
+                        <li><a asp-controller="Home" asp-action="BloodAvailability" class="text-muted text-decoration-none">Check Availability</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h6 class="text-uppercase">Contact Us</h6>
+                    <p class="text-muted mb-1"><i class="fas fa-phone me-2"></i>+880-1234-567890</p>
+                    <p class="text-muted mb-1"><i class="fas fa-envelope me-2"></i>info@lifelink.com</p>
+                    <p class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Dhaka, Bangladesh</p>
+                </div>
+            </div>
+            <hr class="border-secondary" />
+            <div class="text-center text-muted">
+                <p class="mb-0">&copy; 2026 LifeLink Blood Bank. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI Assistant Chatbot Floating Widget -->
+    <partial name="_ChatbotWidget" />
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Real-Time Notifications & SignalR Client Script -->
+    <partial name="_NotificationToast" />
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

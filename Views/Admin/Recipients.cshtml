@@ -1,0 +1,189 @@
+@model IEnumerable<LifeLink.Models.BloodRequest>
+@{
+    ViewData["Title"] = "Manage Recipients";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<!-- Content Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="mb-0">Recipients & Blood Requests</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
+                    <li class="breadcrumb-item active">Recipients</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center g-2">
+                    <div class="col-md-4">
+                        <h3 class="card-title">All Blood Requests (@(Model?.Count() ?? 0))</h3>
+                    </div>
+                    <div class="col-md-5">
+                        <form method="get" asp-controller="Admin" asp-action="Recipients" class="d-flex gap-2">
+                            <select name="status" class="form-select form-select-sm" style="max-width: 140px;" onchange="this.form.submit()">
+                                <option value="All" selected="@(ViewBag.Status == "All")">All Status</option>
+                                <option value="Pending" selected="@(ViewBag.Status == "Pending")">Pending</option>
+                                <option value="Approved" selected="@(ViewBag.Status == "Approved")">Approved</option>
+                                <option value="Completed" selected="@(ViewBag.Status == "Completed")">Completed</option>
+                                <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">Cancelled</option>
+                            </select>
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Search patient/hospital..." value="@ViewBag.Search" />
+                                <button class="btn btn-danger" type="submit"><i class="bi bi-search"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addRecipientModal">
+                            <i class="bi bi-plus-lg me-1"></i>Add New Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-danger">
+                            <tr>
+                                <th>ID</th>
+                                <th>Patient Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Blood Type</th>
+                                <th>Hospital</th>
+                                <th>Required Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var req in Model)
+                                {
+                                    var badgeClass = req.Status == "Approved" ? "bg-success" :
+                                                     req.Status == "Completed" ? "bg-primary" :
+                                                     req.Status == "Pending" ? "bg-warning text-dark" : "bg-secondary";
+                                    <tr>
+                                        <td>#@req.RequestId</td>
+                                        <td><strong>@(req.Receiver?.Name ?? "N/A")</strong></td>
+                                        <td>@(req.Receiver?.Email ?? "N/A")</td>
+                                        <td>@(req.Receiver?.Phone ?? "N/A")</td>
+                                        <td><span class="badge bg-danger fs-6">@req.BloodGroup</span></td>
+                                        <td>@(req.Hospital?.Name ?? req.Location)</td>
+                                        <td>@(req.RequiredDate?.ToString("yyyy-MM-dd") ?? req.RequestDate.ToString("yyyy-MM-dd"))</td>
+                                        <td><span class="badge @badgeClass">@req.Status</span></td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a asp-controller="Admin" asp-action="RecipientEdit" asp-route-id="@req.RequestId" class="btn btn-sm btn-info" title="Edit Request">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                @if (req.Status == "Pending")
+                                                {
+                                                    <form asp-controller="Admin" asp-action="RecipientApprove" asp-route-id="@req.RequestId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-success" title="Approve Request">
+                                                            <i class="bi bi-check-lg"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                <form asp-controller="Admin" asp-action="RecipientDelete" asp-route-id="@req.RequestId" method="post" onsubmit="return confirm('Delete this blood request?');" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete Request">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">No blood requests found in the database.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Recipient Modal -->
+<div class="modal fade" id="addRecipientModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Blood Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Admin" asp-action="RecipientAdd" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Patient / Contact Name *</label>
+                        <input type="text" name="fullName" class="form-control" placeholder="Enter name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" class="form-control" placeholder="Enter email" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone *</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="Enter phone" required />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Blood Type Needed *</label>
+                            <select name="bloodType" class="form-select" required>
+                                <option value="">Select Blood</option>
+                                <option>A+</option><option>A-</option>
+                                <option>B+</option><option>B-</option>
+                                <option>O+</option><option>O-</option>
+                                <option>AB+</option><option>AB-</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Required Date *</label>
+                            <input type="date" name="requiredDate" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Hospital Name *</label>
+                        <input type="text" name="hospitalName" class="form-control" placeholder="e.g. Dhaka Medical College Hospital" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address / District *</label>
+                        <input type="text" name="address" class="form-control" placeholder="City or Area" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-check-circle me-1"></i>Save Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
