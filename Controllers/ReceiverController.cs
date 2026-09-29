@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LifeLink.Controllers
 {
-    [Authorize(Roles = "Receiver")]
+    [Authorize(Roles = "Receiver,Donor & Receiver")]
     public class ReceiverController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -67,7 +67,7 @@ namespace LifeLink.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateRequest(string bloodGroup, int quantity, int hospitalId, string location, string emergencyLevel, DateTime requiredDate)
+        public async Task<IActionResult> CreateRequest(string bloodGroup, int quantity, int hospitalId, string location, string emergencyLevel, DateTime requiredDate, string reason, string patientName, string? diseaseName, string? hemoglobin)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
@@ -80,6 +80,10 @@ namespace LifeLink.Controllers
                 HospitalId = hospitalId,
                 Location = location,
                 EmergencyLevel = string.IsNullOrWhiteSpace(emergencyLevel) ? "Urgent" : emergencyLevel,
+                Reason = reason,
+                PatientName = string.IsNullOrWhiteSpace(patientName) ? "Patient" : patientName,
+                DiseaseName = diseaseName,
+                Hemoglobin = hemoglobin,
                 RequestDate = DateTime.UtcNow,
                 RequiredDate = DateTime.SpecifyKind(requiredDate, DateTimeKind.Utc),
                 Status = "Pending"
@@ -92,7 +96,7 @@ namespace LifeLink.Controllers
             string hospitalName = hospital?.Name ?? "General Hospital";
 
             // SignalR: Broadcast emergency request in real time to all compatible donors!
-            await _notificationService.BroadcastEmergencyRequestAsync(req.BloodGroup, hospitalName, req.Location, req.EmergencyLevel, req.RequestId);
+            await _notificationService.BroadcastEmergencyRequestAsync(req.BloodGroup, hospitalName, req.Location, req.EmergencyLevel, req.RequestId, req.PatientName, req.DiseaseName, req.Hemoglobin);
 
             TempData["Success"] = "Blood request submitted successfully! Real-time emergency alert broadcasted to compatible donors.";
             return RedirectToAction(nameof(Dashboard));
@@ -113,6 +117,66 @@ namespace LifeLink.Controllers
                 TempData["Success"] = $"Blood request #{id} has been cancelled.";
             }
 
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditRequest(int id)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var req = await _context.BloodRequests
+                .FirstOrDefaultAsync(r => r.RequestId == id && r.ReceiverId == userId);
+
+            if (req == null) return NotFound();
+
+            // Only editable while not yet completed/cancelled/fulfilled
+            if (req.Status is "Completed" or "Cancelled" or "Fulfilled")
+            {
+                TempData["Error"] = "This request can no longer be edited.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            ViewBag.Hospitals = await _context.Hospitals.OrderBy(h => h.Name).ToListAsync();
+            return View(req);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditRequest(int id, string bloodGroup, int quantity, int hospitalId, string location, string emergencyLevel, DateTime requiredDate, string reason, string patientName, string? diseaseName, string? hemoglobin)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
+
+            var req = await _context.BloodRequests
+                .FirstOrDefaultAsync(r => r.RequestId == id && r.ReceiverId == userId);
+
+            if (req == null) return NotFound();
+
+            if (req.Status is "Completed" or "Cancelled" or "Fulfilled")
+            {
+                TempData["Error"] = "This request can no longer be edited.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            req.BloodGroup = bloodGroup;
+            req.Quantity = quantity > 0 ? quantity : 1;
+            req.HospitalId = hospitalId;
+            req.Location = location;
+            req.EmergencyLevel = string.IsNullOrWhiteSpace(emergencyLevel) ? "Urgent" : emergencyLevel;
+            req.Reason = reason;
+            req.PatientName = string.IsNullOrWhiteSpace(patientName) ? "Patient" : patientName;
+            req.DiseaseName = diseaseName;
+            req.Hemoglobin = hemoglobin;
+            req.RequiredDate = DateTime.SpecifyKind(requiredDate, DateTimeKind.Utc);
+
+            await _context.SaveChangesAsync();
+
+            var hospital = await _context.Hospitals.FindAsync(hospitalId);
+            await _notificationService.BroadcastEmergencyRequestAsync(req.BloodGroup, hospital?.Name ?? "General Hospital", req.Location, req.EmergencyLevel, req.RequestId, req.PatientName, req.DiseaseName, req.Hemoglobin);
+
+            TempData["Success"] = $"Blood request #{id} updated successfully and re-broadcasted to donors.";
             return RedirectToAction(nameof(Dashboard));
         }
 

@@ -49,7 +49,7 @@ namespace LifeLink.Services
             await _hubContext.Clients.Group($"user_{userId}").SendAsync("ReceiveNotification", payload);
         }
 
-        public async Task BroadcastEmergencyRequestAsync(string bloodGroup, string hospitalName, string location, string urgency, int requestId)
+        public async Task BroadcastEmergencyRequestAsync(string bloodGroup, string hospitalName, string location, string urgency, int requestId, string? patientName = null, string? diseaseName = null, string? hemoglobin = null)
         {
             // Find all active donors whose blood group can donate to this request
             var allDonors = await _context.DonorProfiles
@@ -61,6 +61,10 @@ namespace LifeLink.Services
                 .Where(d => _matchingService.IsBloodCompatible(d.BloodGroup, bloodGroup))
                 .ToList();
 
+            var patientInfo = string.IsNullOrWhiteSpace(patientName)
+                ? ""
+                : $" Patient: {patientName}{(string.IsNullOrWhiteSpace(diseaseName) ? "" : $" ({diseaseName})")}{(string.IsNullOrWhiteSpace(hemoglobin) ? "" : $", Hb {hemoglobin} g/dL")}.";
+
             var payload = new
             {
                 requestId = requestId,
@@ -68,8 +72,11 @@ namespace LifeLink.Services
                 hospitalName = hospitalName,
                 location = location,
                 urgency = urgency,
+                patientName = patientName,
+                diseaseName = diseaseName,
+                hemoglobin = hemoglobin,
                 title = $"URGENT: {bloodGroup} Blood Needed!",
-                message = $"Emergency request for {bloodGroup} at {hospitalName} ({location}). Are you able to help?",
+                message = $"Emergency request for {bloodGroup} at {hospitalName} ({location}).{patientInfo} Are you able to help?",
                 url = $"/Donor/Dashboard",
                 timestamp = DateTime.UtcNow.ToString("hh:mm tt")
             };
@@ -81,7 +88,7 @@ namespace LifeLink.Services
                 {
                     UserId = donor.UserId,
                     RequestId = requestId,
-                    Message = $"Emergency: {bloodGroup} needed at {hospitalName} ({location}).",
+                    Message = $"Emergency: {bloodGroup} needed at {hospitalName} ({location}).{patientInfo}",
                     CreatedAt = DateTime.UtcNow,
                     IsRead = false
                 });

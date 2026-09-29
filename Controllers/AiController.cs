@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using LifeLink.Models;
 using LifeLink.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,14 @@ namespace LifeLink.Controllers
                 });
             }
 
-            var response = await _chatbotService.ProcessQueryAsync(request.Message);
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId);
+            var userContext = new ChatUserContext(
+                currentUserId > 0 ? currentUserId : null,
+                User.FindFirstValue(ClaimTypes.Role),
+                User.Identity?.Name,
+                User.Identity?.IsAuthenticated == true);
+
+            var response = await _chatbotService.ProcessQueryAsync(request.Message, userContext);
             return Json(response);
         }
 
