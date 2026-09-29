@@ -1,3 +1,4 @@
+using LifeLink.Models.ViewModels;
 using System.Security.Claims;
 using LifeLink.Models;
 using LifeLink.Services;

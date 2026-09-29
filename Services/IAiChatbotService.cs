@@ -1,4 +1,5 @@
 using LifeLink.Models;
+using LifeLink.Models.ViewModels;
 
 namespace LifeLink.Services
 {

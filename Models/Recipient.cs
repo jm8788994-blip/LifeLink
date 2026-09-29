@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace LifeLink.Models
@@ -34,6 +35,17 @@ namespace LifeLink.Models
         [Display(Name = "Required Date")]
         [DataType(DataType.Date)]
         public DateTime RequiredDate { get; set; }
+
+        [StringLength(150)]
+        public string? PatientName { get; set; }
+
+        [StringLength(200)]
+        public string? DiseaseName { get; set; }
+
+       public string? Hemoglobin { get; set; }
+
+        [StringLength(500)]
+        public string? Reason { get; set; }
 
         [Display(Name = "Registration Date")]
         public DateTime RegistrationDate { get; set; } = DateTime.Now;
