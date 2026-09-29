@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using LifeLink.Data;
 using LifeLink.Models;
+using LifeLink.Models.ViewModels;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace LifeLink.Services
@@ -347,3 +349,4 @@ namespace LifeLink.Services
         }
     }
 }
+
