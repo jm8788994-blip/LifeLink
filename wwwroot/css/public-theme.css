@@ -296,3 +296,55 @@ body {
         font-size: 2rem;
     }
 }
+/* LifeLink UI Enhancements */
+.feature-card {
+    background: #ffffff;
+    border: 1px solid #eeeeee;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-6px);
+    border-color: #dc3545;
+    box-shadow: 0 10px 30px rgba(220, 53, 69, 0.15);
+}
+
+.feature-card i {
+    color: #dc3545;
+}
+
+.feature-card h5 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.feature-card p {
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+/* Smooth Button Hover */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Mobile Spacing */
+@media (max-width: 576px) {
+    .hero-section {
+        padding: 70px 0;
+    }
+
+    .hero-section p {
+        font-size: 1rem;
+    }
+
+    .form-card {
+        padding: 25px;
+    }
+}
