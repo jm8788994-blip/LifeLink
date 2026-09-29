@@ -4,6 +4,6 @@ namespace LifeLink.Services
 {
     public interface IAiChatbotService
     {
-        Task<ChatbotMessageResponse> ProcessQueryAsync(string userMessage);
+        Task<ChatbotMessageResponse> ProcessQueryAsync(string userMessage, ChatUserContext? user = null);
     }
 }

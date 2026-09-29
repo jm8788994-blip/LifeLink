@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Render.com uses PORT environment variable
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5094";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+// Render.com uses PORT environment variable; otherwise fallback to launchSettings.json in local/Visual Studio
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -27,7 +30,14 @@ builder.Services.AddSwaggerGen(c =>
 // Register DbContext with PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, pg =>
+    {
+        pg.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorCodesToAdd: null);
+        pg.CommandTimeout(120);
+    }));
 
 // Register Application Services
 builder.Services.AddSingleton<IPasswordHasherService, PasswordHasherService>();
@@ -71,6 +81,10 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+        if (ex.InnerException != null)
+        {
+            logger.LogError(ex.InnerException, "INNER EXCEPTION: {InnerMessage}", ex.InnerException.Message);
+        }
     }
 }
 
@@ -99,7 +113,6 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();

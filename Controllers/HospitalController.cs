@@ -2,6 +2,7 @@ using System.Security.Claims;
 using LifeLink.Data;
 using LifeLink.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,15 +14,18 @@ namespace LifeLink.Controllers
         private readonly ApplicationDbContext _context;
         private readonly Services.IAiForecastingService _forecastingService;
         private readonly Services.INotificationService _notificationService;
+        private readonly IWebHostEnvironment _env;
 
         public HospitalController(
             ApplicationDbContext context, 
             Services.IAiForecastingService forecastingService,
-            Services.INotificationService notificationService)
+            Services.INotificationService notificationService,
+            IWebHostEnvironment env)
         {
             _context = context;
             _forecastingService = forecastingService;
             _notificationService = notificationService;
+            _env = env;
         }
 
         public async Task<IActionResult> Dashboard(int? hospitalId)
@@ -85,6 +89,79 @@ namespace LifeLink.Controllers
             return View(hospital);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            Hospital? hospital = null;
+
+            if (User.IsInRole("Admin"))
+            {
+                if (!id.HasValue) return NotFound();
+                hospital = await _context.Hospitals.FirstOrDefaultAsync(h => h.HospitalId == id.Value);
+            }
+            else
+            {
+                var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? "";
+                hospital = await _context.Hospitals
+                    .FirstOrDefaultAsync(h => h.Contact.Contains(userEmail) || userEmail.Contains("dmc"))
+                           ?? await _context.Hospitals.FirstOrDefaultAsync();
+                if (hospital == null)
+                {
+                    TempData["Error"] = "No hospital profile is attached to your account yet. Please contact the administrator.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+            }
+
+            if (hospital == null) return NotFound();
+            ViewBag.IsAdminMode = User.IsInRole("Admin");
+            ViewBag.HospitalEmail = await GetHospitalLoginEmailAsync(hospital);
+            return View(hospital);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, string name, string address, string location, string contact)
+        {
+            Hospital? hospital = null;
+
+            if (User.IsInRole("Admin"))
+            {
+                if (!id.HasValue) return NotFound();
+                hospital = await _context.Hospitals.FirstOrDefaultAsync(h => h.HospitalId == id.Value);
+            }
+            else
+            {
+                var myEmail = User.FindFirstValue(ClaimTypes.Email) ?? "";
+                hospital = await _context.Hospitals
+                    .FirstOrDefaultAsync(h => h.Contact.Contains(myEmail) || myEmail.Contains("dmc"))
+                           ?? await _context.Hospitals.FirstOrDefaultAsync();
+            }
+
+            if (hospital == null) return NotFound();
+
+            hospital.Name = string.IsNullOrWhiteSpace(name) ? hospital.Name : name.Trim();
+            hospital.Address = string.IsNullOrWhiteSpace(address) ? hospital.Address : address.Trim();
+            hospital.Location = string.IsNullOrWhiteSpace(location) ? hospital.Location : location.Trim();
+            hospital.Contact = string.IsNullOrWhiteSpace(contact) ? hospital.Contact : contact.Trim();
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Hospital information updated successfully.";
+
+            if (User.IsInRole("Admin")) return RedirectToAction(nameof(AdminController.Hospitals), "Admin");
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        private async Task<string> GetHospitalLoginEmailAsync(Hospital hospital)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                            u.Role != null && u.Role.RoleName == "Hospital" &&
+                            u.Name == hospital.Name && u.Phone == hospital.Contact)
+                        ?? await _context.Users.FirstOrDefaultAsync(u =>
+                            u.Role != null && u.Role.RoleName == "Hospital" &&
+                            u.Name == hospital.Name);
+            return user?.Email ?? "";
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStock(int stockId, int quantity, string? status)
@@ -134,6 +211,116 @@ namespace LifeLink.Controllers
                     "/Receiver/Dashboard");
 
                 TempData["Success"] = $"Blood request #{requestId} has been fulfilled and blood stock deducted.";
+            }
+
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadDocument(IFormFile document)
+        {
+            Hospital? hospital = null;
+
+            if (User.IsInRole("Admin"))
+            {
+                hospital = await _context.Hospitals.FirstOrDefaultAsync();
+            }
+            else
+            {
+                var myEmail = User.FindFirstValue(ClaimTypes.Email) ?? "";
+                hospital = await _context.Hospitals
+                    .FirstOrDefaultAsync(h => h.Contact.Contains(myEmail) || myEmail.Contains("dmc"))
+                           ?? await _context.Hospitals.FirstOrDefaultAsync();
+            }
+
+            if (hospital == null) return NotFound();
+
+            if (document == null || document.Length == 0)
+            {
+                TempData["Error"] = "Please choose a document to upload.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            var allowed = new[] { ".pdf", ".jpg", ".jpeg", ".png", ".webp" };
+            var ext = Path.GetExtension(document.FileName).ToLowerInvariant();
+
+            if (!allowed.Contains(ext) || document.Length > 5 * 1024 * 1024)
+            {
+                TempData["Error"] = "Only PDF or image files (jpg, png, webp) up to 5 MB are allowed.";
+                return RedirectToAction(nameof(Dashboard));
+            }
+
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "documents");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = $"hospital_{hospital.HospitalId}_{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await document.CopyToAsync(stream);
+            }
+
+            if (!string.IsNullOrWhiteSpace(hospital.VerificationDocPath))
+            {
+                try
+                {
+                    var oldPath = Path.Combine(_env.WebRootPath, "uploads", "documents", Path.GetFileName(hospital.VerificationDocPath));
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+                catch
+                {
+                    // best-effort cleanup
+                }
+            }
+
+            hospital.VerificationDocPath = $"/uploads/documents/{fileName}";
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Approval document uploaded successfully. It is now available for review.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveDocument()
+        {
+            Hospital? hospital = null;
+
+            if (User.IsInRole("Admin"))
+            {
+                hospital = await _context.Hospitals.FirstOrDefaultAsync();
+            }
+            else
+            {
+                var myEmail = User.FindFirstValue(ClaimTypes.Email) ?? "";
+                hospital = await _context.Hospitals
+                    .FirstOrDefaultAsync(h => h.Contact.Contains(myEmail) || myEmail.Contains("dmc"))
+                           ?? await _context.Hospitals.FirstOrDefaultAsync();
+            }
+
+            if (hospital != null && !string.IsNullOrWhiteSpace(hospital.VerificationDocPath))
+            {
+                try
+                {
+                    var oldPath = Path.Combine(_env.WebRootPath, "uploads", "documents", Path.GetFileName(hospital.VerificationDocPath));
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+                catch
+                {
+                    // best-effort cleanup
+                }
+
+                hospital.VerificationDocPath = null;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Approval document removed.";
             }
 
             return RedirectToAction(nameof(Dashboard));

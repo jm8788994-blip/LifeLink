@@ -90,6 +90,18 @@ namespace LifeLink.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetUnreadCount()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int currentUserId)) return Unauthorized();
+
+            var unread = await _context.ChatMessages
+                .CountAsync(m => m.ReceiverId == currentUserId && !m.IsRead);
+
+            return Json(new { count = unread });
+        }
+
+        [HttpGet]
         [Route("api/[controller]/[action]")]
         [Route("[controller]/[action]")]
         public async Task<IActionResult> GetMessages(int otherUserId)

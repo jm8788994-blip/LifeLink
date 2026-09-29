@@ -1,13 +1,14 @@
 using System.Security.Claims;
 using LifeLink.Data;
 using LifeLink.Models;
+using LifeLink.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace LifeLink.Controllers
 {
-    [Authorize(Roles = "Donor")]
+    [Authorize(Roles = "Donor,Donor & Receiver")]
     public class DonorController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -60,6 +61,13 @@ namespace LifeLink.Controllers
             ViewBag.DaysRemaining = daysRemaining;
             ViewBag.NextEligibleDate = nextEligibleDate;
 
+            // Donor criteria gate: must be 18+, have a blood group set, and be available
+            bool isOfAge = AgeHelper.IsAdult(profile.DateOfBirth);
+            bool hasBloodGroup = !string.IsNullOrWhiteSpace(profile.BloodGroup);
+            ViewBag.IsOfAge = isOfAge;
+            ViewBag.HasBloodGroup = hasBloodGroup;
+            ViewBag.DonorGateOk = isOfAge && hasBloodGroup && profile.Availability;
+
             // 2. Compatible Blood Groups for this donor
             var compatibleNeedGroups = GetCompatibleRecipientGroups(profile.BloodGroup);
 
@@ -108,6 +116,18 @@ namespace LifeLink.Controllers
             var profile = await _context.DonorProfiles.FirstOrDefaultAsync(dp => dp.UserId == userId);
             if (profile != null)
             {
+                if (profile.Availability == false && !AgeHelper.IsAdult(profile.DateOfBirth))
+                {
+                    TempData["Error"] = "You must be 18 years or older to become an active donor.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
+                if (profile.Availability == false && string.IsNullOrWhiteSpace(profile.BloodGroup))
+                {
+                    TempData["Error"] = "Set your blood group before becoming an active donor.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 profile.Availability = !profile.Availability;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = profile.Availability 
@@ -135,6 +155,13 @@ namespace LifeLink.Controllers
 
             if (request != null && donor != null)
             {
+                // Donor eligibility gate: 18+ required to commit a donation
+                if (!AgeHelper.IsAdult(donor.DonorProfile?.DateOfBirth))
+                {
+                    TempData["Error"] = "You must be 18 years or older to accept a blood donation request.";
+                    return RedirectToAction(nameof(Dashboard));
+                }
+
                 // Update request status
                 request.Status = "Donor Accepted";
                 await _context.SaveChangesAsync();
@@ -181,37 +208,6 @@ namespace LifeLink.Controllers
             }
 
             return View(donation);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ExportHistoryCsv()
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdStr, out int userId)) return Unauthorized();
-
-            var profile = await _context.DonorProfiles
-                .Include(dp => dp.Donations)
-                    .ThenInclude(d => d.Hospital)
-                .Include(dp => dp.User)
-                .FirstOrDefaultAsync(dp => dp.UserId == userId);
-
-            if (profile == null) return NotFound();
-
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine("Certificate ID,Donation Date,Hospital,Blood Group,Status");
-
-            foreach (var d in profile.Donations.OrderByDescending(x => x.DonationDate))
-            {
-                var certId = $"LL-CERT-{d.DonationId:D6}";
-                var date = d.DonationDate.ToString("yyyy-MM-dd");
-                var hospital = $"\"{d.Hospital?.Name ?? "LifeLink Medical Center"}\"";
-                var blood = profile.BloodGroup;
-                var status = d.Status;
-                sb.AppendLine($"{certId},{date},{hospital},{blood},{status}");
-            }
-
-            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
-            return File(bytes, "text/csv", $"LifeLink_Donation_History_{DateTime.UtcNow:yyyyMMdd}.csv");
         }
 
         // Helper: Blood Compatibility Matrix (Donor can donate to...)
