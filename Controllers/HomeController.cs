@@ -1,5 +1,6 @@
 using LifeLink.Data;
 using LifeLink.Models;
+using LifeLink.Models.ViewModels;
 using LifeLink.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
