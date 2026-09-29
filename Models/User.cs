@@ -1,3 +1,6 @@
+
+        using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -36,13 +39,21 @@ namespace LifeLink.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation properties
+        [NotMapped]
+        public string? ProfilePicturePath { get; set; }
+
         public DonorProfile? DonorProfile { get; set; }
+
         public ICollection<BloodRequest> BloodRequests { get; set; } = new List<BloodRequest>();
+
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
         public ICollection<Rating> RatingsGiven { get; set; } = new List<Rating>();
+
         public ICollection<Rating> RatingsReceived { get; set; } = new List<Rating>();
+
         public ICollection<ChatMessage> SentMessages { get; set; } = new List<ChatMessage>();
+
         public ICollection<ChatMessage> ReceivedMessages { get; set; } = new List<ChatMessage>();
     }
 }
