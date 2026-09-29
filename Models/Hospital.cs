@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LifeLink.Models
 {
@@ -28,9 +31,13 @@ namespace LifeLink.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation
+        [NotMapped]
+        public string? VerificationDocPath { get; set; }
+
         public ICollection<BloodRequest> BloodRequests { get; set; } = new List<BloodRequest>();
+
         public ICollection<BloodStock> BloodStocks { get; set; } = new List<BloodStock>();
+
         public ICollection<DonationHistory> Donations { get; set; } = new List<DonationHistory>();
     }
 }

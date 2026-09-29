@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,17 +35,27 @@ namespace LifeLink.Models
 
         [Required]
         [StringLength(30)]
-        public string EmergencyLevel { get; set; } = "Normal"; // Normal, Urgent, Critical
+        public string EmergencyLevel { get; set; } = "Normal";
 
         public DateTime RequestDate { get; set; } = DateTime.UtcNow;
 
         public DateTime? RequiredDate { get; set; }
 
         [StringLength(30)]
-        public string Status { get; set; } = "Pending"; // Pending, Approved, Completed, Cancelled
+        public string Status { get; set; } = "Pending";
 
-        // Navigation
+        [StringLength(150)]
+        public string? PatientName { get; set; }
+
+        [StringLength(200)]
+        public string? DiseaseName { get; set; }
+        public string? Hemoglobin { get; set; }
+       
+        [StringLength(500)]
+        public string? Reason { get; set; }
+
         public ICollection<DonationHistory> Donations { get; set; } = new List<DonationHistory>();
+
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }
